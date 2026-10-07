@@ -1,6 +1,6 @@
 # Stellar Trade
 
-Stellar Trade is an open source prediction market prototype built with Soroban on Stellar. It gives people a way to take a position on a clear YES-or-NO question, then inspect how the pooled XLM stake is settled onchain.
+Stellar Trade is an open-source prediction market prototype built with Soroban on Stellar. Participants take a position on a clear YES-or-NO question, then inspect the pooled XLM settlement on the public ledger.
 
 Markets make forecasts concrete: participants commit value, market rules define when a question closes, and settlement follows a recorded outcome. The contracts support proportional pool payouts, market-scoped fee accounting, cancellation refunds, referral rewards, and an onchain record of forecasting performance. The current prototype uses authorized resolvers, so resolver accountability and evidence are central parts of the product roadmap.
 
