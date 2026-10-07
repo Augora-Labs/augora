@@ -120,7 +120,7 @@ async function connect() {
     state.address = result.address;
     await loadBalance();
     render();
-    window.dispatchEvent(new CustomEvent("spulse:wallet", { detail: { ...state } }));
+    window.dispatchEvent(new CustomEvent("stellartrade:wallet", { detail: { ...state } }));
   } catch (error) {
     state.address = "";
     render();
@@ -161,7 +161,7 @@ function disconnect() {
   state.address = "";
   state.balance = null;
   render();
-  window.dispatchEvent(new CustomEvent("spulse:wallet", { detail: { ...state } }));
+  window.dispatchEvent(new CustomEvent("stellartrade:wallet", { detail: { ...state } }));
 }
 
 connectButton.addEventListener("click", () => state.address ? disconnect() : connect());

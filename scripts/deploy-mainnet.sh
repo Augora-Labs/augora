@@ -1,17 +1,17 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # =============================================================================
-# PULSE — Mainnet Deploy Script
+# STRD — Mainnet Deploy Script
 # =============================================================================
 # Usage:
 #   bash scripts/deploy-mainnet.sh
 #
 # Prerequisites:
-#   1. The PULSE-deployer key must already be in your stellar keystore
+#   1. The STRD-deployer key must already be in your stellar keystore
 #      (it was added during testnet deploy — run: stellar keys ls)
 #   2. The deployer account must be funded on MAINNET with at least 10 XLM
-#      Send XLM to: GDZ4VJWNJPLNU3PAWDYX3V5XNATO7X257DPHWRPFXSCCNEUZ7QTXIIUI
-#   3. Contracts must already be built:
-#      cd contracts && cargo build --target wasm32v1-none --release
+#      Confirm the address with: stellar keys address STRD-deployer
+#   3. Build contracts from ../stellar-trade-contracts:
+#      cargo build --workspace --target wasm32v1-none --release
 #
 # Security model:
 #   - Secret key stays in stellar keystore (~/.stellar/identity/) — not printed
@@ -32,7 +32,7 @@ step()    { echo -e "\n${BOLD}━━━ $* ━━━${NC}"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONTRACTS_DIR="$ROOT/contracts"
+CONTRACTS_DIR="$ROOT/../stellar-trade-contracts"
 FRONTEND_DIR="$ROOT/frontend"
 
 # ── Mainnet config ─────────────────────────────────────────────────────────────
@@ -55,7 +55,7 @@ echo -e "${RED}${BOLD}╚══════════════════�
 echo ""
 echo -e "  Network:   ${BOLD}Stellar Mainnet${NC} (Public Global Stellar Network)"
 echo -e "  RPC:       $RPC_URL"
-echo -e "  Deployer:  $(stellar keys address PULSE-deployer 2>/dev/null || echo 'NOT FOUND')"
+echo -e "  Deployer:  $(stellar keys address STRD-deployer 2>/dev/null || echo 'NOT FOUND')"
 echo ""
 echo -e "  ${YELLOW}This will spend approximately 7–10 XLM in deploy fees.${NC}"
 echo -e "  ${YELLOW}All transactions are IRREVERSIBLE.${NC}"
@@ -68,8 +68,8 @@ fi
 
 # ── Verify deployer key exists in keystore ─────────────────────────────────────
 step "Verifying deployer identity"
-DEPLOYER=$(stellar keys address PULSE-deployer 2>&1) || \
-  error "PULSE-deployer key not found in keystore. Run testnet deploy first or add key manually."
+DEPLOYER=$(stellar keys address STRD-deployer 2>&1) || \
+  error "STRD-deployer key not found in keystore. Run testnet deploy first or add key manually."
 info "Deployer: $DEPLOYER"
 
 # ── Add mainnet network to stellar CLI ────────────────────────────────────────
@@ -94,7 +94,7 @@ success "Balance sufficient: $BALANCE XLM"
 
 # ── Verify WASM builds exist ───────────────────────────────────────────────────
 step "Verifying WASM builds"
-for WASM in PULSE_token leaderboard referral_registry prediction_market; do
+for WASM in stellar_trade_token leaderboard referral_registry prediction_market; do
   if [[ ! -f "$WASM_DIR/$WASM.wasm" ]]; then
     warn "Missing $WASM.wasm — rebuilding..."
     cd "$CONTRACTS_DIR"
@@ -114,7 +114,7 @@ deploy_contract() {
   local OUT
   OUT=$(stellar contract deploy \
     --network "$NETWORK" \
-    --source-account PULSE-deployer \
+    --source-account STRD-deployer \
     --wasm "$WASM" 2>&1)
 
   local ID
@@ -143,7 +143,7 @@ info "Starting balance: $(get_bal) XLM"
 echo ""
 
 B_TOKEN=$(get_bal)
-TOKEN_ID=$(deploy_contract "PULSE_token"     "$WASM_DIR/PULSE_token.wasm")
+TOKEN_ID=$(deploy_contract "stellar_trade_token"     "$WASM_DIR/stellar_trade_token.wasm")
 A_TOKEN=$(get_bal)
 echo "  → Cost: $(python3 -c "print(f'{float(\"$B_TOKEN\")-float(\"$A_TOKEN\"):.7f}')") XLM"
 
@@ -168,17 +168,17 @@ info "Balance after deploy: $(get_bal) XLM"
 # ── Initialize ─────────────────────────────────────────────────────────────────
 step "Initializing contracts"
 
-info "1/5 PULSE_token..."
+info "1/5 stellar_trade_token..."
 B=$(get_bal)
-stellar contract invoke --network "$NETWORK" --source-account PULSE-deployer \
+stellar contract invoke --network "$NETWORK" --source-account STRD-deployer \
   --id "$TOKEN_ID" -- initialize \
-  --admin "$DEPLOYER" --name "PULSE" --symbol "PLSE" --decimals 7 2>&1 | \
+  --admin "$DEPLOYER" --name "Stellar Trade" --symbol "STRD" --decimals 7 2>&1 | \
   grep -v "^ℹ️\|^🌎\|^🔗"
 echo "  → Cost: $(python3 -c "print(f'{float(\"$B\")-float(\"$(get_bal)\"):.7f}')") XLM"
 
 info "2/5 leaderboard..."
 B=$(get_bal)
-stellar contract invoke --network "$NETWORK" --source-account PULSE-deployer \
+stellar contract invoke --network "$NETWORK" --source-account STRD-deployer \
   --id "$LEADERBOARD_ID" -- initialize \
   --admin "$DEPLOYER" --market_contract "$MARKET_ID" --referral_contract "$REFERRAL_ID" 2>&1 | \
   grep -v "^ℹ️\|^🌎\|^🔗"
@@ -186,7 +186,7 @@ echo "  → Cost: $(python3 -c "print(f'{float(\"$B\")-float(\"$(get_bal)\"):.7f
 
 info "3/5 referral_registry..."
 B=$(get_bal)
-stellar contract invoke --network "$NETWORK" --source-account PULSE-deployer \
+stellar contract invoke --network "$NETWORK" --source-account STRD-deployer \
   --id "$REFERRAL_ID" -- initialize \
   --admin "$DEPLOYER" --market_contract "$MARKET_ID" \
   --token_contract "$TOKEN_ID" --leaderboard_contract "$LEADERBOARD_ID" \
@@ -195,7 +195,7 @@ echo "  → Cost: $(python3 -c "print(f'{float(\"$B\")-float(\"$(get_bal)\"):.7f
 
 info "4/5 prediction_market..."
 B=$(get_bal)
-stellar contract invoke --network "$NETWORK" --source-account PULSE-deployer \
+stellar contract invoke --network "$NETWORK" --source-account STRD-deployer \
   --id "$MARKET_ID" -- initialize \
   --admin "$DEPLOYER" --token_contract "$TOKEN_ID" \
   --referral_contract "$REFERRAL_ID" --leaderboard_contract "$LEADERBOARD_ID" \
@@ -204,9 +204,9 @@ echo "  → Cost: $(python3 -c "print(f'{float(\"$B\")-float(\"$(get_bal)\"):.7f
 
 info "5/5 set_minter (market + referral)..."
 B=$(get_bal)
-stellar contract invoke --network "$NETWORK" --source-account PULSE-deployer \
+stellar contract invoke --network "$NETWORK" --source-account STRD-deployer \
   --id "$TOKEN_ID" -- set_minter --minter "$MARKET_ID" 2>&1 | grep -v "^ℹ️\|^🌎\|^🔗"
-stellar contract invoke --network "$NETWORK" --source-account PULSE-deployer \
+stellar contract invoke --network "$NETWORK" --source-account STRD-deployer \
   --id "$TOKEN_ID" -- set_minter --minter "$REFERRAL_ID" 2>&1 | grep -v "^ℹ️\|^🌎\|^🔗"
 echo "  → Cost: $(python3 -c "print(f'{float(\"$B\")-float(\"$(get_bal)\"):.7f}')") XLM"
 
@@ -271,4 +271,3 @@ NEXT_PUBLIC_SOROBAN_RPC_URL=https://mainnet.sorobanrpc.com
 NEXT_PUBLIC_HORIZON_URL=https://horizon.stellar.org
 NEXT_PUBLIC_NETWORK_PASSPHRASE=Public Global Stellar Network ; September 2015
 ENVBLOCK
-

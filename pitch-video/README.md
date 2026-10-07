@@ -1,26 +1,11 @@
-# SPulse pitch video
+# Stellar Trade Project Video
 
-This folder contains the reusable source for the GrantFox pitch video.
+This directory contains the source files for a new project overview video. The old branded video and captions were removed because their product claims no longer match the code. Generate a new video from the current source before sharing.
 
-Run the renderer from the repository root:
+The renderer uses Microsoft Edge, FFmpeg, FFprobe, Python, and `edge-tts`. It captures the current static site, generates narration and captions, and writes `Stellar-Trade-Overview.mp4`.
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File pitch-video/render.ps1
 ```
 
-The renderer captures the current static website, generates narration with the
-Microsoft Ezinne Neural Nigerian English voice, creates synchronized captions,
-and writes:
-
-- `SPulse-GrantFox-Pitch.mp4`
-- `captions.srt`
-
-The video is designed for a 1920x1080 application upload. Review the rendered
-video before submission and confirm the application does not impose a shorter
-duration or smaller file-size limit.
-
-The renderer requires `edge-tts` for neural narration:
-
-```powershell
-python -m pip install edge-tts
-```
+Install the narration dependency with `python -m pip install edge-tts`. Review the generated video, spoken claims, duration, and file size before sharing.

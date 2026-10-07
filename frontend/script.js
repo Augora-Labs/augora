@@ -2,17 +2,17 @@ import { placeBet, checkTransactionStatus } from "./soroban.js";
 
 const HORIZON_URL = "https://horizon.stellar.org";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3";
-const POSITION_STORAGE_KEY = "spulse:session-positions";
+const POSITION_STORAGE_KEY = "stellartrade:session-positions";
 const TESTNET_EXPLORER_PREFIX = "https://stellar.expert/explorer/testnet/tx/";
 
 const state = { price: null, change: null, selectedMarket: 0, outcome: "yes", positions: [] };
 const baseMarkets = [
-  { category: "crypto", title: "Will Stellar XLM trade above $0.50 before September 30, 2026?", detail: "Live Stellar Testnet market #3. Resolution is controlled by the deployed SPulse market contract.", yes: 50, volume: "Testnet live", close: "Sep 30, 2026", onchainId: 3 },
-  { category: "network", title: "Will Stellar pass 70 million ledgers this year?", detail: "Resolves from the public Stellar mainnet ledger sequence.", yes: 68, volume: "Preview", close: "Dec 31" },
-  { category: "network", title: "Will average ledger close stay below 6 seconds?", detail: "Measured against public Horizon ledger timestamps.", yes: 76, volume: "Preview", close: "7-day window" },
-  { category: "crypto", title: "Will XLM gain 10% over the next seven days?", detail: "Resolves from the CoinGecko XLM/USD seven-day price change.", yes: 47, volume: "Preview", close: "7 days" },
-  { category: "network", title: "Will mainnet process 100+ operations in one ledger?", detail: "Resolves from operation counts published by Stellar Horizon.", yes: 61, volume: "Preview", close: "24 hours" },
-  { category: "crypto", title: "Will XLM outperform Bitcoin this month?", detail: "Compares monthly USD returns from the same public pricing source.", yes: 43, volume: "Preview", close: "Month end" },
+  { category: "crypto", title: "Will XLM close above $0.50 by September 30, 2026?", detail: "Deployed Stellar Testnet market #3. Its published close date has passed; the app does not read current settlement state.", yes: 50, volume: "Closed · Testnet", close: "Closed Sep 30, 2026", onchainId: 3, acceptingPositions: false },
+  { category: "network", title: "Will Stellar pass 70 million ledgers this year?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 68, volume: "Concept", close: "Example" },
+  { category: "network", title: "Will average ledger close stay below 6 seconds?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 76, volume: "Concept", close: "Example" },
+  { category: "crypto", title: "Will XLM gain 10% over the next seven days?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 47, volume: "Concept", close: "Example" },
+  { category: "network", title: "Will mainnet process 100+ operations in one ledger?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 61, volume: "Concept", close: "Example" },
+  { category: "crypto", title: "Will XLM outperform Bitcoin this month?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 43, volume: "Concept", close: "Example" },
 ];
 
 function loadPositions() {
@@ -127,9 +127,9 @@ function renderMarkets(filter = "all") {
   }).filter((market) => filter === "all" || market.category === filter);
   $("#market-list").innerHTML = markets.map((market) => {
     const index = baseMarkets.findIndex((item) => item.title === market.title);
-    const badge = market.onchainId ? `<span class="market-badge live">Testnet #${market.onchainId}</span>` : '<span class="market-badge">Demonstration</span>';
-    const action = market.onchainId ? "Place position" : "Preview market";
-    return `<article class="market-card"><div class="market-card-header"><span class="category">${market.category}</span>${badge}</div><h3>${market.title}</h3><p>${market.detail}</p><div class="probability" aria-label="Yes ${market.yes} percent"><span style="width:${market.yes}%"></span></div><div class="outcomes"><strong class="yes">Yes ${market.yes}%</strong><strong class="no">No ${100 - market.yes}%</strong></div><div class="market-card-action"><div class="market-meta"><span>${market.close}</span></div><button class="trade-link" type="button" data-trade-index="${index}">${action} <svg><use href="#i-arrow" /></svg></button></div></article>`;
+    const badge = market.onchainId ? `<span class="market-badge closed">Testnet #${market.onchainId} · closed</span>` : '<span class="market-badge">Concept</span>';
+    const action = market.onchainId ? "Inspect market" : "Preview concept";
+    return `<article class="market-card"><div class="market-card-header"><span class="category">${market.category}</span>${badge}</div><h3>${market.title}</h3><p>${market.detail}</p><div class="probability" aria-label="Illustrative probability, not live pool odds"><span style="width:${market.yes}%"></span></div><div class="outcomes"><strong class="yes">Sample ${market.yes}%</strong><strong class="no">Sample ${100 - market.yes}%</strong></div><div class="market-card-action"><div class="market-meta"><span>${market.close}</span></div><button class="trade-link" type="button" data-trade-index="${index}">${action} <svg><use href="#i-arrow" /></svg></button></div></article>`;
   }).join("");
 }
 
@@ -160,24 +160,29 @@ function selectMarket(index, scroll = true) {
   $("#trade-title").textContent = market.title;
   $("#trade-detail").textContent = market.detail;
   $("#trade-close").textContent = market.close;
-  $("#trade-probability").textContent = `${market.yes}% Yes`;
+  $("#trade-probability").textContent = `Sample ${market.yes}% Yes`;
   $("#trade-probability-bar").style.width = `${market.yes}%`;
   $("#yes-price").textContent = `${market.yes}%`;
   $("#no-price").textContent = `${100 - market.yes}%`;
   const submitLabel = $("#submit-order span");
+  const orderSubmit = $("#submit-order");
   const mode = $("#trade-mode");
   if (market.onchainId) {
-    submitLabel.textContent = "Place Testnet position";
-    mode.innerHTML = '<svg><use href="#i-zap" /></svg> Live Testnet market';
+    submitLabel.textContent = "Market closed";
+    orderSubmit.disabled = true;
+    mode.innerHTML = '<svg><use href="#i-help" /></svg> Closed Testnet market';
     mode.classList.add("live");
-    $("#trade-status").textContent = "Testnet open";
-    $("#order-disclaimer").textContent = "Freighter will show the exact contract transaction before anything is submitted.";
+    $("#trade-status").textContent = "Close date passed";
+    $("#trade-status").classList.remove("online");
+    $("#order-disclaimer").textContent = "The published close date has passed. The app does not read settlement status from the contract.";
   } else {
     submitLabel.textContent = "Preview position";
+    orderSubmit.disabled = false;
     mode.innerHTML = '<svg><use href="#i-help" /></svg> Simulation mode';
     mode.classList.remove("live");
-    $("#trade-status").textContent = "Preview";
-    $("#order-disclaimer").textContent = "No funds will move. This interface demonstrates the intended trading flow.";
+    $("#trade-status").textContent = "Concept";
+    $("#trade-status").classList.remove("online");
+    $("#order-disclaimer").textContent = "Preview only. No funds move; no live market pool, price, or resolution rules are configured.";
   }
   updateOrderPreview();
   if (scroll) $("#trade").scrollIntoView({ behavior: "smooth" });
@@ -271,6 +276,10 @@ $("#order-form").addEventListener("submit", async (event) => {
   event.preventDefault();
   const stake = Math.max(1, Math.min(1000, Number($("#stake-amount").value) || 1));
   const market = currentMarket();
+  if (market.onchainId && !market.acceptingPositions) {
+    window.showWalletNotice("This Testnet market passed its published close date and no longer accepts positions.", true);
+    return;
+  }
   const probability = state.outcome === "yes" ? market.yes : 100 - market.yes;
   const position = {
     title: market.title,
@@ -431,4 +440,3 @@ updateNetwork();
 updatePrice();
 setInterval(updateNetwork, 10000);
 setInterval(updatePrice, 60000);
-

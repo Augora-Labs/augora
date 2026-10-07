@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env bash
 # =============================================================================
-# PULSE — Testnet Deploy Script
+# STRD — Testnet Deploy Script
 # =============================================================================
 # Usage:
 #   cp .deploy.env.example .deploy.env   # fill in your secret key
@@ -40,7 +40,7 @@ step()    { echo -e "\n${BOLD}━━━ $* ━━━${NC}" >&2; }
 # ── Locate repo root ───────────────────────────────────────────────────────────
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-CONTRACTS_DIR="$ROOT/contracts"
+CONTRACTS_DIR="$ROOT/../stellar-trade-contracts"
 FRONTEND_DIR="$ROOT/frontend"
 
 # ── Load secrets from .deploy.env ─────────────────────────────────────────────
@@ -67,17 +67,17 @@ FRIENDBOT_URL="https://friendbot.stellar.org"
 XLM_SAC_TESTNET="CDLZFC3SYJYDZT7K67VZ75HPJVIEUVNIXF47ZG2FB2RMQQVU2HHGCYSC"
 
 # ── Derive deployer public key without printing the secret ─────────────────────
-# We import the key into a temp stellar identity named "PULSE-deployer"
-# so subsequent commands use --source-account PULSE-deployer (reads keystore, not env).
+# We import the key into a temp stellar identity named "STRD-deployer"
+# so subsequent commands use --source-account STRD-deployer (reads keystore, not env).
 step "Importing deployer identity"
 
 # Remove any stale identity first
-stellar keys rm --force PULSE-deployer 2>/dev/null || true
+stellar keys rm --force STRD-deployer 2>/dev/null || true
 
 # Add the secret key to the local stellar keystore (file at ~/.config/stellar/identity/)
-echo "$DEPLOYER_SECRET" | stellar keys add PULSE-deployer --secret-key 2>&1
+echo "$DEPLOYER_SECRET" | stellar keys add STRD-deployer --secret-key 2>&1
 
-DEPLOYER_PUBLIC=$(stellar keys public-key PULSE-deployer)
+DEPLOYER_PUBLIC=$(stellar keys public-key STRD-deployer)
 info "Deployer: $DEPLOYER_PUBLIC"
 
 # ── Add testnet network config if not already present ─────────────────────────
@@ -112,7 +112,7 @@ fi
 # ── Build contracts ────────────────────────────────────────────────────────────
 step "Building WASM (release)"
 cd "$CONTRACTS_DIR"
-cargo +1.91.1 build --target wasm32v1-none --release --quiet 2>&1
+cargo build --workspace --target wasm32v1-none --release --quiet 2>&1
 success "Build complete"
 
 WASM_DIR="$CONTRACTS_DIR/target/wasm32v1-none/release"
@@ -127,7 +127,7 @@ deploy_contract() {
   local WASM_HASH
   WASM_HASH=$(stellar contract upload \
     --network "$NETWORK" \
-    --source-account PULSE-deployer \
+    --source-account STRD-deployer \
     --wasm "$WASM" \
     2>&1 | grep -E '^[0-9a-f]{64}$' | head -1)
 
@@ -135,7 +135,7 @@ deploy_contract() {
     # Try without filtering — upload might already print only the hash
     WASM_HASH=$(stellar contract upload \
       --network "$NETWORK" \
-      --source-account PULSE-deployer \
+      --source-account STRD-deployer \
       --wasm "$WASM")
   fi
 
@@ -145,14 +145,14 @@ deploy_contract() {
   local CONTRACT_ID
   CONTRACT_ID=$(stellar contract deploy \
     --network "$NETWORK" \
-    --source-account PULSE-deployer \
+    --source-account STRD-deployer \
     --wasm-hash "$WASM_HASH" \
     2>&1 | grep -E '^C[A-Z0-9]{55}$' | head -1)
 
   if [[ -z "$CONTRACT_ID" ]]; then
     CONTRACT_ID=$(stellar contract deploy \
       --network "$NETWORK" \
-      --source-account PULSE-deployer \
+      --source-account STRD-deployer \
       --wasm-hash "$WASM_HASH")
   fi
 
@@ -163,7 +163,7 @@ deploy_contract() {
 # ── Deploy all contracts ───────────────────────────────────────────────────────
 step "Deploying contracts"
 
-TOKEN_ID=$(deploy_contract "PULSE_token"     "$WASM_DIR/PULSE_token.wasm")
+TOKEN_ID=$(deploy_contract "stellar_trade_token"     "$WASM_DIR/stellar_trade_token.wasm")
 LEADERBOARD_ID=$(deploy_contract "leaderboard"  "$WASM_DIR/leaderboard.wasm")
 REFERRAL_ID=$(deploy_contract "referral_registry" "$WASM_DIR/referral_registry.wasm")
 MARKET_ID=$(deploy_contract "prediction_market" "$WASM_DIR/prediction_market.wasm")
@@ -179,23 +179,23 @@ info "  market:      $MARKET_ID"
 step "Initializing contracts"
 
 # 1. Token contract
-info "Initializing PULSE_token..."
+info "Initializing stellar_trade_token..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$TOKEN_ID" \
   -- initialize \
   --admin "$DEPLOYER_PUBLIC" \
-  --name "PULSE" \
-  --symbol "PLSE" \
+  --name "Stellar Trade" \
+  --symbol "STRD" \
   --decimals 7
-success "PULSE_token initialized"
+success "stellar_trade_token initialized"
 
 # 2. Leaderboard contract
 info "Initializing leaderboard..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$LEADERBOARD_ID" \
   -- initialize \
   --admin "$DEPLOYER_PUBLIC" \
@@ -207,7 +207,7 @@ success "leaderboard initialized"
 info "Initializing referral_registry..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$REFERRAL_ID" \
   -- initialize \
   --admin "$DEPLOYER_PUBLIC" \
@@ -221,7 +221,7 @@ success "referral_registry initialized"
 info "Initializing prediction_market..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$MARKET_ID" \
   -- initialize \
   --admin "$DEPLOYER_PUBLIC" \
@@ -233,10 +233,10 @@ success "prediction_market initialized"
 
 # The optimized leaderboard mints rewards internally, so it must know the
 # token contract before referral registration or market claims can reward users.
-info "Connecting leaderboard to PULSE_token..."
+info "Connecting leaderboard to stellar_trade_token..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$LEADERBOARD_ID" \
   -- set_token \
   --admin "$DEPLOYER_PUBLIC" \
@@ -249,7 +249,7 @@ step "Configuring token minters"
 info "Setting market contract as minter..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$TOKEN_ID" \
   -- set_minter \
   --minter "$MARKET_ID"
@@ -258,7 +258,7 @@ success "market_id is now a token minter"
 info "Setting referral contract as minter..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$TOKEN_ID" \
   -- set_minter \
   --minter "$REFERRAL_ID"
@@ -267,7 +267,7 @@ success "referral_id is now a token minter"
 info "Setting leaderboard contract as minter..."
 stellar contract invoke \
   --network "$NETWORK" \
-  --source-account PULSE-deployer \
+  --source-account STRD-deployer \
   --id "$TOKEN_ID" \
   -- set_minter \
   --minter "$LEADERBOARD_ID"
@@ -278,7 +278,7 @@ if [[ -n "${RESOLVER_PUBLIC_KEY:-}" ]]; then
   step "Adding resolver"
   stellar contract invoke \
     --network "$NETWORK" \
-    --source-account PULSE-deployer \
+    --source-account STRD-deployer \
     --id "$MARKET_ID" \
     -- add_resolver \
     --admin "$DEPLOYER_PUBLIC" \
@@ -289,9 +289,9 @@ fi
 # ── Optional: set up sponsor as fee recipient ──────────────────────────────────
 if [[ -n "${SPONSOR_SECRET:-}" ]]; then
   step "Configuring fee sponsorship"
-  SPONSOR_PUBLIC=$(stellar keys public-key PULSE-deployer 2>/dev/null || \
-    stellar keys generate PULSE-sponsor --secret-key <<< "$SPONSOR_SECRET" && \
-    stellar keys public-key PULSE-sponsor)
+  SPONSOR_PUBLIC=$(stellar keys public-key STRD-deployer 2>/dev/null || \
+    stellar keys generate STRD-sponsor --secret-key <<< "$SPONSOR_SECRET" && \
+    stellar keys public-key STRD-sponsor)
   info "Sponsor: $SPONSOR_PUBLIC"
 fi
 
@@ -318,7 +318,7 @@ success "deploy-output.json written"
 # ── Summary ────────────────────────────────────────────────────────────────────
 echo ""
 echo -e "${BOLD}${GREEN}╔══════════════════════════════════════════════════════════════╗${NC}"
-echo -e "${BOLD}${GREEN}║              PULSE Testnet Deploy Complete!               ║${NC}"
+echo -e "${BOLD}${GREEN}║              STRD Testnet Deploy Complete!               ║${NC}"
 echo -e "${BOLD}${GREEN}╚══════════════════════════════════════════════════════════════╝${NC}"
 echo ""
 echo -e "  Admin (deployer):  ${BOLD}$DEPLOYER_PUBLIC${NC}"
@@ -339,7 +339,6 @@ echo ""
 
 # ── Clean up temporary identity ────────────────────────────────────────────────
 # The identity stays in ~/.config/stellar/identity/ for subsequent CLI calls.
-# If you want to remove it: stellar keys rm PULSE-deployer
-info "Identity 'PULSE-deployer' saved to stellar keystore for future CLI calls."
-info "To remove it later: stellar keys rm PULSE-deployer"
-
+# If you want to remove it: stellar keys rm STRD-deployer
+info "Identity 'STRD-deployer' saved to stellar keystore for future CLI calls."
+info "To remove it later: stellar keys rm STRD-deployer"

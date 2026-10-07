@@ -1,143 +1,70 @@
-# SPulse
+# Stellar Trade
 
-SPulse is a prediction-market project built with Soroban smart contracts on Stellar and a lightweight static HTML frontend.
+Stellar Trade is an open source prediction market prototype built with Soroban on Stellar. It gives people a way to take a position on a clear YES-or-NO question, then inspect how the pooled XLM stake is settled onchain.
 
-The frontend uses plain HTML, CSS, and JavaScript. It does not require Node.js, Next.js, React, npm, or a build step.
+Markets make forecasts concrete: participants commit value, market rules define when a question closes, and settlement follows a recorded outcome. The contracts support proportional pool payouts, market-scoped fee accounting, cancellation refunds, referral rewards, and an onchain record of forecasting performance. The current prototype uses authorized resolvers, so resolver accountability and evidence are central parts of the product roadmap.
 
-## Current status
+## Why build this on Stellar?
 
-The Soroban contracts are deployed and initialized on Stellar Testnet. The static frontend displays live public Stellar network data and XLM pricing, connects to Freighter, and submits positions for verified Testnet market #3 directly to the deployed prediction-market contract. The other market cards remain clearly labeled demonstrations.
+Stellar offers a public ledger and Soroban smart contracts for low-friction asset movement and settlement. Stellar Trade uses those properties to make the path from position to payout inspectable. The goal is to help communities, builders, and ecosystem participants coordinate around questions that matter to them, while keeping the rules and settlement logic open for review.
 
-### Testnet contracts
+## What the prototype is proving
+
+The core experiment is whether a small market can make its question, stake, fees, and final payout understandable to participants. The contracts and tests cover the settlement mechanics; the browser app demonstrates a wallet transaction path. The current market catalog and rankings are illustrative, and the configured Testnet market has expired. This is an early-stage prototype, not a live production market or audited financial product.
+
+The next milestones are to load market terms and status directly from Soroban, publish objective resolution criteria and evidence, connect rankings to contract data, and complete an independent security review before any production launch.
+
+## What works today
+
+- Four Soroban contracts for prediction markets, a reward asset, referrals, and rankings, plus cross-contract invariant tests. The Rust workspace lives in the adjacent [`stellar-trade-contracts`](../stellar-trade-contracts) repository.
+- A static browser app with public Stellar mainnet and XLM price data, Freighter wallet connection, Testnet transaction simulation and signing, submission, confirmation polling, and explorer links.
+- Deployed Testnet contracts. The configured market #3 was published to close on September 30, 2026. That date has passed; the app does not yet read current market resolution state or load market terms from the contract. The wallet integration demonstrates the transaction path; no position can currently be placed in that market.
+- Market catalog and leaderboard pages that illustrate the product direction. Their sample odds and rankings are explicitly labeled and are not live contract data.
+
+Testnet contract IDs:
 
 | Contract | Testnet address |
 | --- | --- |
-| Prediction Market | `CAPCAPWPGPOCENAJFYYIE22WYNFEDVZ3CT73M5MAKILFMBQ5TN2MIS6T` |
-| PULSE Token | `CBYUQUXPGWUQRV7STCV3YPVLWNTFJHKLEAG7LVAOK7H4FIFJGZW5P476` |
-| Referral Registry | `CCKVUVYXR6FBB4VFYGDF3IDDUVBRJGKPDDRABTZYKI2LKAJNVLF3TTQ2` |
+| Prediction market | `CAPCAPWPGPOCENAJFYYIE22WYNFEDVZ3CT73M5MAKILFMBQ5TN2MIS6T` |
+| Legacy reward asset (pre-rebrand) | `CBYUQUXPGWUQRV7STCV3YPVLWNTFJHKLEAG7LVAOK7H4FIFJGZW5P476` |
+| Referral registry | `CCKVUVYXR6FBB4VFYGDF3IDDUVBRJGKPDDRABTZYKI2LKAJNVLF3TTQ2` |
 | Leaderboard | `CCMNYMUI4XMDBTTMM7E6KNQFF3OVKS3Q2ERJ4EVQGCLW4VQCGUGG2AQM` |
 
-Testnet deployer: `GC5D4ENQ3U3Q23L5RUG2GGIDFFVKOVJ6GUFJRTNIQ6SRP5J7RMECKSL7`
+Inspect transactions and contracts on [Stellar Expert Testnet](https://stellar.expert/explorer/testnet).
 
-The deployment output is stored locally in the ignored `deploy-output.json` file. Contract activity can be inspected with [Stellar Expert Testnet](https://stellar.expert/explorer/testnet).
+The IDs above are existing pre-rebrand Testnet deployments. Fresh deployments
+from this source initialize the reward asset as **Stellar Trade (STRD)** and
+produce new contract IDs. The new reward asset has not been deployed; old
+holders and contracts continue to refer to the legacy asset at its existing ID.
 
-## Repository layout
+## Run the frontend
 
-- `contracts/` — Rust/Soroban contracts for markets, rewards, referrals, and leaderboards.
-- `frontend/` — static HTML, CSS, and JavaScript website.
-- `scripts/` — testnet/mainnet deployment and smoke-test scripts.
-- `docs/` — contract invocation examples and technical documentation.
-
-## Run the static frontend
-
-Opening `frontend/index.html` directly works for most UI features. A local HTTP server is recommended because browsers may restrict API requests from `file://` pages.
-
-Using Python:
+The site uses plain HTML, CSS, and JavaScript; it has no bundler or npm build step. From `stellar-trade/`:
 
 ```bash
-cd frontend
-python -m http.server 8080
+python3 -m http.server 8080 --directory frontend
 ```
 
-Then open:
+Open `http://localhost:8080`. Connect Freighter on **Testnet** to explore the wallet flow. Use Testnet assets only; they have no mainnet value. A browser session stores the visible position history locally.
 
-```text
-http://localhost:8080
-```
+## Contracts and checks
 
-You can also use the VS Code Live Server extension or deploy the contents of `frontend/` to any static host.
-## Frontend files
-
-- `frontend/index.html` — page structure and inline SVG icon library.
-- `frontend/markets.html` — searchable and filterable market catalog.
-- `frontend/leaderboard.html` — community ranking page.
-- `frontend/styles.css` — core theme and responsive layout.
-- `frontend/product.css` — trading workspace, dashboard, FAQ, and expanded product sections.
-- `frontend/pages.css` — shared styling for dedicated application pages.
-- `frontend/script.js` — live data, market filters, Testnet order flow, simulations, and dashboard interactions.
-- `frontend/soroban.js` — Soroban simulation, signing, submission, confirmation polling, and contract errors.
-- `frontend/pages.js` — market catalog and leaderboard rendering.
-- `frontend/wallet.js` — Freighter connection, testnet validation, balance display, and Friendbot funding.
-
-## Connect a wallet
-
-1. Install the [Freighter browser extension](https://www.freighter.app/).
-2. Open Freighter and switch its network to **Testnet**.
-3. Serve the frontend over HTTP and select **Connect wallet**.
-4. Approve access in Freighter.
-5. If the testnet account is empty, use the **Fund** action to request free test XLM from Friendbot.
-
-The wallet integration uses the official `@stellar/freighter-api` package as a pinned browser module. The site never receives or stores the wallet secret key. Freighter asks the user for approval and exposes only the selected public address.
-
-### Place a Testnet position
-
-1. Connect a funded Freighter account on Testnet.
-2. Select the market labeled **Testnet #3**.
-3. Choose YES or NO and enter at least 1 test XLM.
-4. Review and approve the exact contract transaction in Freighter.
-5. Wait for confirmation, then open the transaction from the dashboard in Stellar Expert.
-
-The browser loads the source account, builds a `place_bet` invocation, simulates it through Stellar RPC, asks Freighter to sign the prepared XDR, submits it to Testnet, and polls until the ledger confirms success. A failed or cancelled wallet request is never displayed as a completed position.
-
-The page retrieves:
-
-- Stellar ledger information from public Horizon APIs.
-- XLM/USD market information from CoinGecko.
-
-If a public API is unavailable, the interface displays an unavailable state instead of fabricated live values.
-
-## Smart contracts
-
-The Soroban workspace contains four contracts:
-
-- `prediction_market` — market creation, YES/NO bets, resolution, claims, cancellations, refunds, and fees.
-- `PULSE_token` — reward token and authorized minters.
-- `referral_registry` — user registration, referrals, and bonuses.
-- `leaderboard` — points, win/loss statistics, rankings, and token rewards.
-
-### Contract tests
-
-Install Rust and Stellar CLI, then run:
+From `stellar-trade-contracts/`, install Rust 1.91.0 and the `wasm32v1-none` target. Run:
 
 ```bash
-cd contracts
-cargo test --workspace
+cargo test --workspace --all-features
+cargo fmt --all -- --check
+cargo clippy --workspace --all-features -- -D warnings
 ```
 
-The current contract suite contains 89 passing tests.
+Review [`INVARIANT_MATRIX.md`](../stellar-trade-contracts/INVARIANT_MATRIX.md) before changing fees, reward values, storage lifetimes, or payout rules. Frontend CI checks page assets and JavaScript syntax with Node.js 22.
 
-## Testnet deployment
+## Design and roadmap
 
-The deployment script uses the ignored `.deploy.env` file and free Friendbot test XLM:
+The protocol uses pooled stakes: winning positions share the pool proportionally, while per-market fee ledgers keep funds traceable across settlement and cancellation. Contract tests exercise payout conservation, referral flow, reward accounting, and cross-contract pause behavior.
 
-```bash
-bash scripts/deploy-testnet.sh
-```
+Resolution currently uses authorized accounts. Public price and network feeds are informational; they do not resolve markets automatically. The next product work is to read market terms and status from the contracts, provide verifiable resolution criteria and evidence, and connect the market catalog and rankings to onchain data. Clear separation between live, expired, and illustrative data is a product requirement.
 
-The script:
+## Security and license
 
-1. Builds optimized WASM artifacts.
-2. Funds the deployer on testnet.
-3. Deploys all four contracts.
-4. Initializes and connects the contracts.
-5. Configures token-minter permissions.
-6. Writes the public deployment details to `deploy-output.json`.
-
-Run the end-to-end contract workflow with:
-
-```bash
-bash scripts/smoke-test.sh
-```
-
-The smoke test creates temporary Friendbot-funded users and checks registration, betting, cancellation, refunds, resolution, claims, token rewards, fees, and leaderboard data.
-
-
-## Security
-
-- Never commit `.deploy.env`, secret keys, seed phrases, or wallet exports.
-- Contract IDs and public account addresses are safe to publish.
-- Wallet connection, balance lookup, and positions on market #3 are real Testnet operations. All other market cards remain simulations and are labeled accordingly.
-
-## License
-
-This project is licensed under the MIT License.
+Never commit `.deploy.env`, secret keys, recovery phrases, local wallet identities, or generated deployment output. The wallet integration asks Freighter to sign and never asks the browser to handle a secret key. Testnet software and assets are experimental and carry no mainnet value. Licensed under MIT.

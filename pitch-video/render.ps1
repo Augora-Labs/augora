@@ -4,7 +4,7 @@ $pitchDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $repoDir = Split-Path -Parent $pitchDir
 $frontendDir = Join-Path $repoDir 'frontend'
 $workDir = Join-Path $pitchDir '.render'
-$outputPath = Join-Path $pitchDir 'SPulse-GrantFox-Pitch.mp4'
+$outputPath = Join-Path $pitchDir 'Stellar-Trade-Overview.mp4'
 $captionPath = Join-Path $pitchDir 'captions.srt'
 $edgePath = 'C:\Program Files (x86)\Microsoft\Edge\Application\msedge.exe'
 
@@ -33,14 +33,14 @@ if (Test-Path $workDir) { Remove-Item -LiteralPath $workDir -Recurse -Force }
 New-Item -ItemType Directory -Path $workDir | Out-Null
 
 $scenes = @(
-    @{ Image='01-title.png'; Url=('file:///' + ((Join-Path $pitchDir 'title.html') -replace '\\','/')); Text='Prediction markets can be expensive, difficult to understand, and dependent on centralized platforms that control user funds and settlement.' },
-    @{ Image='02-home.png'; Url='http://127.0.0.1:8765/index.html'; Text='SPulse is a non-custodial prediction-market platform built on Stellar, designed to make transparent markets fast, accessible, and easy to explore.' },
-    @{ Image='03-markets.png'; Url='http://127.0.0.1:8765/markets.html'; Text='Users can discover clear questions, review probabilities and resolution criteria, preview positions in XLM, and follow community performance through a dedicated leaderboard.' },
-    @{ Image='04-trade.png'; Url='http://127.0.0.1:8765/index.html#trade'; Text='The current static application connects to Freighter on Stellar Testnet and displays live public network information. Full browser-to-contract transaction submission is our next integration milestone.' },
-    @{ Image='05-how.png'; Url='http://127.0.0.1:8765/index.html#how'; Text='Behind the product are four interconnected Soroban contracts managing prediction markets, referrals, leaderboard points, and PULSE rewards through transparent on-chain rules.' },
-    @{ Image='06-leaderboard.png'; Url='http://127.0.0.1:8765/leaderboard.html'; Text='All four contracts are deployed on Testnet. We have completed eighty-nine contract tests and verified registration, positions, cancellation refunds, resolution, claims, points, and reward distribution.' },
-    @{ Image='07-network.png'; Url='http://127.0.0.1:8765/index.html#network'; Text='With GrantFox support, we will complete direct contract integration, test SPulse with external users, strengthen protocol security, and prepare for a responsible mainnet launch.' },
-    @{ Image='08-outro.png'; Url=('file:///' + ((Join-Path $pitchDir 'outro.html') -replace '\\','/')); Text='SPulse is building a faster, clearer, and community-driven prediction-market experience powered by Stellar.' }
+    @{ Image='01-title.png'; Url=('file:///' + ((Join-Path $pitchDir 'title.html') -replace '\\','/')); Text='Prediction markets can make it hard to see how a position is handled, who decides the result, and how settlement works.' },
+    @{ Image='02-home.png'; Url='http://127.0.0.1:8765/index.html'; Text='Stellar Trade is an open source experiment in making those rules visible. It brings market positions and settlement to Stellar smart contracts, where users can inspect transactions on a public ledger.' },
+    @{ Image='03-markets.png'; Url='http://127.0.0.1:8765/markets.html'; Text='The prototype has four connected contracts: prediction markets, a reward asset, referrals, and a leaderboard. The market contract pools XLM positions, records fees by market, supports cancellations and refunds, and calculates proportional payouts when a market is resolved.' },
+    @{ Image='04-trade.png'; Url='http://127.0.0.1:8765/index.html#trade'; Text='The browser connects to Freighter on Testnet. It builds and simulates a contract transaction, asks the wallet to sign, then submits and tracks the result. Testnet market three demonstrates this path; its published close date has passed, and the site does not yet read its current resolution state.' },
+    @{ Image='05-how.png'; Url='http://127.0.0.1:8765/index.html#how'; Text='Market resolution is currently performed by authorized accounts. Live public price feeds provide context, but they do not resolve the market. That boundary is visible in the product and is a key design decision for future oracle and evidence work.' },
+    @{ Image='06-leaderboard.png'; Url='http://127.0.0.1:8765/leaderboard.html'; Text='The contracts include tests for payout conservation, fee accounting, referrals, rewards, access control, storage lifetime, and cross-contract behavior.' },
+    @{ Image='07-network.png'; Url='http://127.0.0.1:8765/index.html#network'; Text='The next milestones are reading market state directly from the contracts, publishing precise resolution criteria and evidence, and connecting the catalog and rankings to live data.' },
+    @{ Image='08-outro.png'; Url=('file:///' + ((Join-Path $pitchDir 'outro.html') -replace '\\','/')); Text='Stellar Trade is a Testnet prototype. We are building the path from a clear question to a settlement users can inspect.' }
 )
 
 $server = Start-Process -FilePath python -ArgumentList @('-m','http.server','8765','--bind','127.0.0.1','--directory',$frontendDir) -WindowStyle Hidden -PassThru

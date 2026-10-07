@@ -1,35 +1,39 @@
 # Contract Calls and ABI Examples
 
-This guide gives quick examples for calling the main SPulse contract
-methods through Soroban RPC tooling. Values are placeholders unless they are
-listed in the deployed contract table.
+This guide gives example calls for the Stellar Trade Soroban contracts. The
+application's deployed contracts are on Testnet; these examples do not imply
+a Mainnet deployment.
 
 ## Deployed Contracts
 
-| Contract | Mainnet address |
+| Contract | Testnet address |
 |----------|-----------------|
-| Prediction Market | `CDGNPRYTFDXJLWZE4YDKZXW4IEN2RLPSE4N7VM5HJ7NLPL2QC45GIXI5` |
-| PULSE Token | `CAYL4TKNRMXAX5ZLQGFEZ6XOC2QHTCTN5QC2SB5BEEHLVO6SDU2UBLRH` |
-| Referral Registry | `CAGJVX6EXMCKKWDJCQFIEJ34CZTHZOGLWJM6KQTGDEXEO723CJZ5773H` |
-| Leaderboard | `CCWWOQSDSO3XXLCMA6A2HYRUFYVNUJZ2HPAMFQSPOB4JWYIBY2HWVTOB` |
+| Prediction market | `CAPCAPWPGPOCENAJFYYIE22WYNFEDVZ3CT73M5MAKILFMBQ5TN2MIS6T` |
+| Legacy reward asset (pre-rebrand) | `CBYUQUXPGWUQRV7STCV3YPVLWNTFJHKLEAG7LVAOK7H4FIFJGZW5P476` |
+| Referral registry | `CCKVUVYXR6FBB4VFYGDF3IDDUVBRJGKPDDRABTZYKI2LKAJNVLF3TTQ2` |
+| Leaderboard | `CCMNYMUI4XMDBTTMM7E6KNQFF3OVKS3Q2ERJ4EVQGCLW4VQCGUGG2AQM` |
 
 ## Environment
 
 ```bash
-export STELLAR_RPC_URL="https://soroban-rpc.mainnet.stellar.gateway.fm"
-export STELLAR_NETWORK_PASSPHRASE="Public Global Stellar Network ; September 2015"
-export PREDICTION_MARKET_ID="CDGNPRYTFDXJLWZE4YDKZXW4IEN2RLPSE4N7VM5HJ7NLPL2QC45GIXI5"
+export STELLAR_RPC_URL="https://soroban-testnet.stellar.org"
+export STELLAR_NETWORK_PASSPHRASE="Test SDF Network ; September 2015"
+export PREDICTION_MARKET_ID="CAPCAPWPGPOCENAJFYYIE22WYNFEDVZ3CT73M5MAKILFMBQ5TN2MIS6T"
 ```
 
-For testnet work, replace the RPC URL, network passphrase, and contract IDs with
-the deployed testnet values.
+Market #3's published close date has passed. Inspect the contract and check its
+current onchain state before attempting market actions.
+
+These addresses identify existing pre-rebrand Testnet contracts. New builds
+initialize the reward asset as Stellar Trade (STRD); they do not change the
+identity or metadata of contracts already deployed at these addresses.
 
 ## Prediction Market ABI
 
 | Method | Arguments | Result |
 |--------|-----------|--------|
 | `place_bet` | `user`, `market_id`, `is_yes`, `amount` | Records or increases a YES/NO bet after applying fees. |
-| `resolve_market` | `admin`, `market_id`, `outcome` | Resolves a market with the final YES/NO outcome. |
+| `resolve_market` | `caller`, `market_id`, `outcome` | An authorized account resolves the market with a YES/NO outcome. |
 | `claim` | `user`, `market_id` | Claims winnings, points, and token rewards for an eligible user. |
 
 ## Example: place_bet
@@ -57,8 +61,8 @@ Notes:
 
 ## Example: resolve_market
 
-Use `resolve_market` after the event outcome is known. This should be called by
-an authorized admin source.
+Use `resolve_market` after the event outcome is known. Only an authorized
+resolver or admin may submit it; public price feeds do not settle markets.
 
 ```bash
 soroban contract invoke \
@@ -68,7 +72,7 @@ soroban contract invoke \
   --source "$ADMIN_SECRET_KEY" \
   -- \
   resolve_market \
-  --admin "$ADMIN_ADDRESS" \
+  --caller "$ADMIN_ADDRESS" \
   --market_id 1 \
   --outcome true
 ```

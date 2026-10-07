@@ -1,12 +1,12 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # =============================================================================
-# PULSE — Gas-Reduction Upgrade (Levers E + A)
+# STRD — Gas-Reduction Upgrade (Levers E + A)
 # =============================================================================
 # Upgrades TWO contracts in place (no redeploy, no new addresses, storage kept):
 #   • leaderboard      — Lever E: O(1) eviction (claim fees stay flat at scale)
 #   • referral_registry — Lever A: packed registrant profile (cheaper register)
 #
-# NOT touched: prediction_market, PULSE_token (no logic change). The claim
+# NOT touched: prediction_market, stellar_trade_token (no logic change). The claim
 # payout math and the resolve→claim money path are completely unchanged.
 #
 # Usage:
@@ -14,7 +14,7 @@
 #   bash scripts/upgrade-gas-reduction.sh mainnet   # real upgrade (~1 XLM)
 #
 # Prerequisites:
-#   1. PULSE-deployer key in stellar keystore (the contracts' admin).
+#   1. STRD-deployer key in stellar keystore (the contracts' admin).
 #   2. Built WASM:  cd contracts && stellar contract build
 #   3. Admin = GDZ4VJWNJPLNU3PAWDYX3V5XNATO7X257DPHWRPFXSCCNEUZ7QTXIIUI
 #
@@ -37,12 +37,12 @@ step()    { echo -e "\n${BOLD}━━━ $* ━━━${NC}"; }
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 ROOT="$(cd "$SCRIPT_DIR/.." && pwd)"
-WASM_DIR="$ROOT/contracts/target/wasm32v1-none/release"
+WASM_DIR="$ROOT/../stellar-trade-contracts/target/wasm32v1-none/release"
 
 NETWORK="${1:-}"
 [ -z "$NETWORK" ] && error "Usage: $0 <testnet|mainnet>"
 
-SOURCE="PULSE-deployer"
+SOURCE="STRD-deployer"
 
 # ── Contract IDs (mainnet). For testnet, pass your testnet IDs via env. ────────
 if [ "$NETWORK" = "mainnet" ]; then
@@ -69,7 +69,7 @@ upgrade_contract() {
   local name="$1" cid="$2" wasm="$3"
   step "Upgrading $name ($cid)"
 
-  [ -f "$wasm" ] || error "Missing WASM: $wasm (run: cd contracts && stellar contract build)"
+  [ -f "$wasm" ] || error "Missing WASM: $wasm (build from ../stellar-trade-contracts first)"
 
   info "Installing new WASM bytecode on-chain…"
   local hash
@@ -105,4 +105,3 @@ success "Gas-reduction upgrade complete on $NETWORK."
 echo ""
 echo "Verify a full cycle (place_bet → resolve → claim → register) and confirm"
 echo "the resource-fee drop in the wallet before announcing."
-

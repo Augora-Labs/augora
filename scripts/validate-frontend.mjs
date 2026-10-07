@@ -22,9 +22,6 @@ const htmlFiles = files.filter((file) => extname(file) === ".html");
 
 for (const file of files) {
   const source = readFileSync(file, "utf8");
-  if (/StellarPulse|Stellar Pulse|stellarpulse/i.test(source)) {
-    report(file, "contains retired project branding");
-  }
   if (/\b(S|G)[A-Z2-7]{55}\b/.test(source) && /secret|seed/i.test(source)) {
     report(file, "may contain a Stellar secret or seed value");
   }

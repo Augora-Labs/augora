@@ -1,6 +1,6 @@
 ﻿#!/usr/bin/env bash
 # =============================================================================
-# PULSE — Testnet Smoke Test
+# STRD — Testnet Smoke Test
 # =============================================================================
 # Runs a full end-to-end test on testnet after deploy:
 #   register → create_market → place_bet → resolve → claim → withdraw_fees
@@ -11,7 +11,7 @@
 #
 # Requires:
 #   - deploy-output.json to exist (run deploy-testnet.sh first)
-#   - PULSE-deployer identity in stellar keystore
+#   - STRD-deployer identity in stellar keystore
 #   - Friendbot-funded test accounts are created automatically
 # =============================================================================
 
@@ -53,7 +53,7 @@ NETWORK="testnet"
 FRIENDBOT="https://friendbot.stellar.org"
 HORIZON="https://horizon-testnet.stellar.org"
 
-echo -e "${BOLD}PULSE Testnet Smoke Test${NC}"
+echo -e "${BOLD}STRD Testnet Smoke Test${NC}"
 echo -e "Market:      $MARKET_ID"
 echo -e "Token:       $TOKEN_ID"
 echo -e "Leaderboard: $LEADERBOARD_ID"
@@ -73,7 +73,7 @@ make_account() {
 invoke() {
   stellar -q contract invoke \
     --network "$NETWORK" \
-    --source-account PULSE-deployer \
+    --source-account STRD-deployer \
     "$@" 2>&1
 }
 
@@ -158,7 +158,7 @@ MARKET_RESULT=$(invoke --id "$MARKET_ID" \
   -- create_market \
   --admin "$ADMIN" \
   --question "Will this smoke test pass?" \
-  --image_url "https://PULSE.test/smoke.png" \
+  --image_url "https://example.invalid/smoke.png" \
   --category '{"Crypto": null}' \
   --duration_secs 120 2>&1)
 
@@ -231,7 +231,7 @@ MARKET2=$(invoke --id "$MARKET_ID" \
   -- create_market \
   --admin "$ADMIN" \
   --question "Cancel test market?" \
-  --image_url "https://PULSE.test/cancel.png" \
+  --image_url "https://example.invalid/cancel.png" \
   --category '{"Sports": null}' \
   --duration_secs 3600 2>&1 | tr -d '"' | xargs)
 pass "Market #$MARKET2 created for cancel test"
@@ -325,7 +325,7 @@ else
 fi
 
 ALICE_TOKEN_BAL=$(invoke --id "$TOKEN_ID" -- balance --account "$ALICE" 2>&1 | tr -d '"' | xargs)
-pass "PULSE token balance: $ALICE_TOKEN_BAL (expected 11_0000000 = 1 welcome + 10 win)"
+pass "STRD token balance: $ALICE_TOKEN_BAL (expected 11_0000000 = 1 welcome + 10 win)"
 
 # ── 10. Bob claims as loser ────────────────────────────────────────────────────
 step "10. Bob claims losing reward"
@@ -338,7 +338,7 @@ invoke_as smoke-bob --id "$MARKET_ID" \
 BOB_PTS=$(invoke --id "$LEADERBOARD_ID" -- get_points --user "$BOB" 2>&1 | tr -d '"' | xargs)
 BOB_TOKENS=$(invoke --id "$TOKEN_ID" -- balance --account "$BOB" 2>&1 | tr -d '"' | xargs)
 pass "Bob leaderboard points: $BOB_PTS (expected 10)"
-pass "Bob PULSE tokens: $BOB_TOKENS (expected 2_0000000)"
+pass "Bob STRD tokens: $BOB_TOKENS (expected 2_0000000)"
 
 # ── 11. Withdraw fees ──────────────────────────────────────────────────────────
 step "11. Withdrawing accumulated fees"
@@ -421,4 +421,3 @@ stellar keys rm --force smoke-alice 2>/dev/null || true
 stellar keys rm --force smoke-bob 2>/dev/null || true
 stellar keys rm --force smoke-charlie 2>/dev/null || true
 success "Test identities removed"
-

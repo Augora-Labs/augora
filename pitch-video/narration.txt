@@ -1,15 +1,13 @@
-Prediction markets can be expensive, difficult to understand, and dependent on centralized platforms that control user funds and settlement.
+Prediction markets can make it hard to see how a position is handled, who decides the result, and how settlement works.
 
-SPulse is a non-custodial prediction-market platform built on Stellar, designed to make transparent markets fast, accessible, and easy to explore.
+Stellar Trade is an open source experiment in making those rules visible. It brings market positions and settlement to Stellar smart contracts, where users can inspect transactions on a public ledger.
 
-Users can discover clear questions, review probabilities and resolution criteria, preview positions in XLM, and follow community performance through a dedicated leaderboard.
+The prototype has four connected contracts: prediction markets, a reward asset, referrals, and a leaderboard. The market contract pools XLM positions, records fees by market, supports cancellations and refunds, and calculates proportional payouts when a market is resolved.
 
-The current static application connects to Freighter on Stellar Testnet and displays live public network information. Full browser-to-contract transaction submission is our next integration milestone.
+The browser connects to Freighter on Testnet. It builds and simulates a contract transaction, asks the wallet to sign, then submits and tracks the result. Testnet market three demonstrates this path; its published close date has passed, and the site does not yet read its current resolution state.
 
-Behind the product are four interconnected Soroban contracts managing prediction markets, referrals, leaderboard points, and PULSE rewards through transparent on-chain rules.
+Market resolution is currently performed by authorized accounts. Live public price feeds provide context, but they do not resolve the market. That boundary is visible in the product and is a key design decision for future oracle and evidence work.
 
-All four contracts are deployed on Testnet. We have completed eighty-nine contract tests and verified registration, positions, cancellation refunds, resolution, claims, points, and reward distribution.
+The contracts include tests for payout conservation, fee accounting, referrals, rewards, access control, storage lifetime, and cross-contract behavior. The next milestones are reading market state directly from the contracts, publishing precise resolution criteria and evidence, and connecting the catalog and rankings to live data.
 
-With GrantFox support, we will complete direct contract integration, test SPulse with external users, strengthen protocol security, and prepare for a responsible mainnet launch.
-
-SPulse is building a faster, clearer, and community-driven prediction-market experience powered by Stellar.
+Stellar Trade is a Testnet prototype. We are building the path from a clear question to a settlement users can inspect.

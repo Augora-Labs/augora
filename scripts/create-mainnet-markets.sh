@@ -1,6 +1,6 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # =============================================================================
-# PULSE — Create seed markets on mainnet after deploy
+# STRD — Create seed markets on mainnet after deploy
 # =============================================================================
 # Usage:
 #   bash scripts/create-mainnet-markets.sh
@@ -8,7 +8,7 @@
 # Prerequisites:
 #   - deploy-mainnet.sh must have run successfully
 #   - deploy-mainnet-output.json must exist
-#   - PULSE-deployer key must be in stellar keystore
+#   - STRD-deployer key must be in stellar keystore
 #   - Edit scripts/mainnet-markets.json first to review/adjust questions
 #
 # Each market creation costs ~0.05–0.10 XLM on mainnet.
@@ -43,7 +43,7 @@ get_bal() {
 }
 
 echo ""
-echo -e "${BOLD}PULSE — Mainnet Market Creation${NC}"
+echo -e "${BOLD}STRD — Mainnet Market Creation${NC}"
 echo -e "Market contract: $MARKET_ID"
 echo -e "Admin:           $DEPLOYER"
 echo -e "Balance:         $(get_bal) XLM"
@@ -98,7 +98,7 @@ for m in markets:
 
   RESULT=$(stellar contract invoke \
     --network mainnet \
-    --source-account PULSE-deployer \
+    --source-account STRD-deployer \
     --id "$MARKET_ID" \
     -- create_market \
     --admin "$DEPLOYER" \
@@ -129,5 +129,5 @@ echo -e "Final balance: $(get_bal) XLM"
 echo ""
 echo -e "View your markets:"
 echo -e "  https://stellar.expert/explorer/public/contract/$MARKET_ID"
-echo -e "  https://PULSE-stellar.vercel.app/markets"
+echo -e "  Configure the Stellar Trade frontend to read market data from this deployment."
 

@@ -3,18 +3,19 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <meta name="description" content="SPulse — a real-time view of prediction markets and the Stellar network." />
+    <meta name="description" content="Stellar Trade is a transparent prediction market on Stellar. Explore the protocol, review live network data, and try an onchain Testnet position." />
     <meta name="theme-color" content="#07110f" />
-    <title>SPulse — Live markets on Stellar</title>
+    <title>Stellar Trade — open questions, settled on Stellar</title>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Manrope:wght@600;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="styles.css" />
     <link rel="stylesheet" href="product.css" />
+    <link rel="stylesheet" href="brand.css" />
   </head>
   <body>
     <svg class="svg-sprite" aria-hidden="true">
-      <symbol id="i-pulse" viewBox="0 0 24 24"><path d="M3 12h4l2-6 4 12 2-6h6" /></symbol>
+      <symbol id="i-star" viewBox="0 0 24 24"><path d="m12 2 2.6 6.2L21 11l-6.4 2.8L12 20l-2.6-6.2L3 11l6.4-2.8L12 2Z" /><path d="m19 16 .9 2.1L22 19l-2.1.9L19 22l-.9-2.1L16 19l2.1-.9L19 16Z" /></symbol>
       <symbol id="i-arrow" viewBox="0 0 24 24"><path d="M5 12h14m-5-5 5 5-5 5" /></symbol>
       <symbol id="i-chart" viewBox="0 0 24 24"><path d="M4 19V9m6 10V5m6 14v-7m4 7H2" /></symbol>
       <symbol id="i-layers" viewBox="0 0 24 24"><path d="m12 3 9 5-9 5-9-5 9-5Z" /><path d="m3 12 9 5 9-5M3 16l9 5 9-5" /></symbol>
@@ -37,9 +38,9 @@
 
     <header class="site-header">
       <div class="container nav-wrap">
-        <a class="brand" href="#top" aria-label="SPulse home">
-          <span class="brand-mark"><svg><use href="#i-pulse" /></svg></span>
-          <span>S<span>Pulse</span></span>
+        <a class="brand" href="#top" aria-label="Stellar Trade home">
+          <span class="brand-mark"><svg><use href="#i-star" /></svg></span>
+          <span>Stellar <span>Trade</span></span>
         </a>
         <button class="menu-button" type="button" aria-label="Open navigation" aria-controls="main-navigation" aria-expanded="false"><svg><use href="#i-menu" /></svg></button>
         <nav class="site-nav" id="main-navigation" aria-label="Main navigation">
@@ -54,74 +55,74 @@
         <div class="container hero-grid">
           <div class="hero-copy">
             <div class="live-label"><span class="live-dot"></span><span id="connection-label">Connecting to Stellar</span></div>
-            <h1>Trade your view of <span>what happens next.</span></h1>
-            <p>Clear, fast prediction markets settled on Stellar. Follow live signals, choose an outcome, and keep control of your assets.</p>
+            <h1>Make a call.<br><span>Settle it on Stellar.</span></h1>
+            <p>Stellar Trade is an open prediction market protocol. Take a position on a verifiable outcome, follow every settlement onchain, and keep control of your wallet.</p>
             <div class="hero-actions">
-              <a class="button button-primary" href="markets.html">Browse markets <svg><use href="#i-arrow" /></svg></a>
-              <a class="text-button" href="#how">See how it works</a>
+              <a class="button button-primary" href="#markets">Explore the protocol <svg><use href="#i-arrow" /></svg></a>
+              <a class="text-button" href="#protocol">Explore the protocol</a>
             </div>
             <p class="updated-line"><svg><use href="#i-refresh" /></svg> Data refreshed <time id="last-updated">—</time></p>
           </div>
           <aside class="signal-card" aria-label="Live XLM market signal">
-            <div class="signal-top"><span>Live asset</span><span class="asset-code">XLM / USD</span></div>
+            <div class="signal-top"><span>XLM reference price</span><span class="asset-code">PUBLIC DATA</span></div>
             <div class="price-row"><strong id="xlm-price">—</strong><span id="xlm-change" class="change">Loading</span></div>
             <div class="mini-chart" id="price-chart" aria-label="XLM seven day price chart"><span class="chart-loading">Fetching market data…</span></div>
             <div class="signal-meta"><span>7-day range</span><strong id="price-range">—</strong></div>
-            <p class="data-source">Market data from CoinGecko</p>
+            <p class="data-source">Market data from CoinGecko · context only</p>
           </aside>
         </div>
       </section>
 
       <section id="network" class="network-strip" aria-labelledby="network-title">
         <div class="container">
-          <div class="strip-heading"><div><span class="eyebrow">Network pulse</span><h2 id="network-title">Stellar, right now</h2></div><span id="network-state" class="status-pill">Connecting</span></div>
+          <div class="strip-heading"><div><span class="eyebrow">The network behind every trade</span><h2 id="network-title">Stellar, right now</h2></div><span id="network-state" class="status-pill">Connecting</span></div>
           <div class="metric-grid">
             <article><svg><use href="#i-layers" /></svg><div><span>Latest ledger</span><strong id="latest-ledger">—</strong></div></article>
             <article><svg><use href="#i-clock" /></svg><div><span>Ledger age</span><strong id="ledger-age">—</strong></div></article>
             <article><svg><use href="#i-chart" /></svg><div><span>Operations / ledger</span><strong id="operation-count">—</strong></div></article>
-            <article><svg><use href="#i-globe" /></svg><div><span>Network</span><strong>Public mainnet</strong></div></article>
+            <article><svg><use href="#i-globe" /></svg><div><span>Network</span><strong>Stellar mainnet</strong></div></article>
           </div>
         </div>
       </section>
 
       <section id="markets" class="section container">
-        <div class="section-heading"><div><span class="eyebrow">Open questions</span><h2>Markets in focus</h2><p>Sample market interfaces informed by live XLM pricing. Trading is not enabled in this preview.</p></div><div class="filter-group" role="group" aria-label="Filter markets"><button class="active" data-filter="all">All</button><button data-filter="crypto">Crypto</button><button data-filter="network">Network</button></div></div>
+        <div class="section-heading"><div><span class="eyebrow">A working protocol, demonstrated on Testnet</span><h2>From a market question to an onchain position.</h2><p>Market #3 was deployed on Stellar Testnet. Its published close date has passed. Other examples are concepts while the market catalog integration is developed.</p></div><div class="filter-group" role="group" aria-label="Filter markets"><button class="active" data-filter="all">All</button><button data-filter="crypto">Crypto</button><button data-filter="network">Network</button></div></div>
         <div id="market-list" class="market-grid" aria-live="polite"></div>
       </section>
 
       <section id="trade" class="section trade-section">
         <div class="container">
-          <div class="section-heading"><div><span class="eyebrow">Trading workspace</span><h2>Take a position</h2><p>Choose a market above or use the selected market below to preview a position.</p></div><span class="demo-notice" id="trade-mode"><svg><use href="#i-help" /></svg> Simulation mode</span></div>
+          <div class="section-heading"><div><span class="eyebrow">Testnet transaction flow</span><h2>Explore the position interface</h2><p>The connected Testnet market has passed its published close date. This panel shows the transaction flow and illustrative estimates.</p></div><span class="demo-notice" id="trade-mode"><svg><use href="#i-help" /></svg> Testnet</span></div>
           <div class="trade-layout">
             <div class="trade-market-panel">
-              <div class="trade-title-row"><div><span id="trade-category" class="category">Crypto</span><h3 id="trade-title">Will XLM close above $0.50 this month?</h3></div><span id="trade-status" class="status-pill online">Open</span></div>
+              <div class="trade-title-row"><div><span id="trade-category" class="category">Crypto</span><h3 id="trade-title">Will XLM close above $0.50 by September 30, 2026?</h3></div><span id="trade-status" class="status-pill">Close date passed</span></div>
               <p id="trade-detail">Resolves using the CoinGecko XLM/USD daily close at 23:59 UTC on the final day of the month.</p>
-              <div class="trade-chart-wrap"><div class="trade-chart-head"><span>Market probability</span><strong id="trade-probability">54% Yes</strong></div><div class="large-probability"><span id="trade-probability-bar" style="width:54%"></span></div><div class="chart-scale"><span>0%</span><span>50%</span><span>100%</span></div></div>
+            <div class="trade-chart-wrap"><div class="trade-chart-head"><span>Illustrative probability · not live pool odds</span><strong id="trade-probability">Sample 50% Yes</strong></div><div class="large-probability"><span id="trade-probability-bar" style="width:50%"></span></div><div class="chart-scale"><span>0%</span><span>50%</span><span>100%</span></div></div>
               <div class="resolution-grid"><div><span>Resolution source</span><strong>CoinGecko</strong></div><div><span>Closing</span><strong id="trade-close">Month end</strong></div><div><span>Settlement</span><strong>Stellar mainnet</strong></div></div>
             </div>
             <form id="order-form" class="order-panel">
-              <div class="order-head"><h3>Order preview</h3><span>XLM</span></div>
+              <div class="order-head"><h3>Position details</h3><span>XLM</span></div>
               <div class="wallet-panel" id="wallet-panel">
                 <div class="wallet-panel-icon"><svg><use href="#i-wallet" /></svg></div>
-                <div class="wallet-panel-copy"><strong id="wallet-panel-title">Wallet not connected</strong><span id="wallet-panel-detail">Connect Freighter on Stellar testnet</span></div>
+                <div class="wallet-panel-copy"><strong id="wallet-panel-title">Testnet wallet</strong><span id="wallet-panel-detail">The configured market is past its close date</span></div>
                 <button type="button" id="wallet-panel-action">Connect</button>
               </div>
-              <fieldset><legend>Choose an outcome</legend><div class="outcome-buttons"><button type="button" class="outcome-button yes-choice active" data-outcome="yes"><span>Yes</span><strong id="yes-price">54%</strong></button><button type="button" class="outcome-button no-choice" data-outcome="no"><span>No</span><strong id="no-price">46%</strong></button></div></fieldset>
-              <label class="amount-label" for="stake-amount"><span>Stake amount</span><span>Demo balance: 1,000 XLM</span></label>
+              <fieldset><legend>Choose an outcome</legend><div class="outcome-buttons"><button type="button" class="outcome-button yes-choice active" data-outcome="yes"><span>Yes</span><strong id="yes-price">50%</strong></button><button type="button" class="outcome-button no-choice" data-outcome="no"><span>No</span><strong id="no-price">50%</strong></button></div></fieldset>
+              <label class="amount-label" for="stake-amount"><span>Stake amount</span><span>Testnet XLM only</span></label>
               <div class="amount-input"><input id="stake-amount" type="number" min="1" max="1000" step="1" value="100" required /><span>XLM</span></div>
               <div class="quick-amounts"><button type="button" data-amount="25">25</button><button type="button" data-amount="50">50</button><button type="button" data-amount="100">100</button><button type="button" data-amount="250">250</button></div>
-              <dl class="order-summary"><div><dt>Average price</dt><dd id="average-price">0.54 XLM</dd></div><div><dt>Potential return</dt><dd id="potential-return">185.19 XLM</dd></div><div><dt>Potential profit</dt><dd id="potential-profit">85.19 XLM</dd></div></dl>
-              <button class="button button-primary submit-order" id="submit-order" type="submit"><span>Preview position</span> <svg><use href="#i-arrow" /></svg></button>
-              <p class="order-disclaimer" id="order-disclaimer">No funds will move. This interface demonstrates the intended trading flow.</p>
+              <dl class="order-summary"><div><dt>Illustrative price</dt><dd id="average-price">0.50 XLM</dd></div><div><dt>Estimated return*</dt><dd id="potential-return">200.00 XLM</dd></div><div><dt>Estimated profit*</dt><dd id="potential-profit">100.00 XLM</dd></div></dl>
+              <button class="button button-primary submit-order" id="submit-order" type="submit" disabled><span>Market closed</span> <svg><use href="#i-arrow" /></svg></button>
+              <p class="order-disclaimer" id="order-disclaimer">*Estimates use illustrative probabilities, not live pool odds. Testnet XLM has no mainnet value.</p>
             </form>
           </div>
         </div>
       </section>
 
       <section id="activity" class="section container">
-        <div class="section-heading"><div><span class="eyebrow">Your dashboard</span><h2>Positions and activity</h2><p>Previewed positions appear here and are stored only in this browser session.</p></div><div class="dashboard-tabs"><button class="active" data-dashboard="positions">Positions</button><button data-dashboard="feed">Market feed</button></div></div>
-        <div id="positions-view" class="dashboard-view"><div id="position-list" class="position-list"><div class="empty-state"><svg><use href="#i-activity" /></svg><h3>No positions yet</h3><p>Choose a market and preview your first position.</p><a href="#trade" class="button button-quiet">Open trading workspace</a></div></div></div>
-        <div id="feed-view" class="dashboard-view" hidden><div class="activity-table"><div class="activity-row activity-head"><span>Market</span><span>Side</span><span>Amount</span><span>Time</span></div><div class="activity-row"><span>XLM monthly close</span><strong class="yes">Yes</strong><span>240 XLM</span><time>Just now</time></div><div class="activity-row"><span>Ledger milestone</span><strong class="no">No</strong><span>85 XLM</span><time>2 min ago</time></div><div class="activity-row"><span>Ledger close speed</span><strong class="yes">Yes</strong><span>120 XLM</span><time>5 min ago</time></div></div></div>
+        <div class="section-heading"><div><span class="eyebrow">Your activity</span><h2>Follow your position</h2><p>Submitted positions show their Testnet confirmation status and link to the public explorer.</p></div><div class="dashboard-tabs"><button class="active" data-dashboard="positions">Positions</button><button data-dashboard="feed">Market feed</button></div></div>
+        <div id="positions-view" class="dashboard-view"><div id="position-list" class="position-list"><div class="empty-state"><svg><use href="#i-activity" /></svg><h3>No positions yet</h3><p>Your positions will appear here after you submit a Testnet transaction.</p><a href="#trade" class="button button-quiet">Explore the Testnet market</a></div></div></div>
+        <div id="feed-view" class="dashboard-view" hidden><div class="activity-table"><div class="activity-row activity-head"><span>Market activity</span></div><div class="activity-row"><span>Live wallet positions appear in the Positions tab.</span></div></div></div>
       </section>
 
       <section class="category-band">
@@ -139,19 +140,19 @@
         </div>
       </section>
 
-      <section id="about" class="section container about-panel">
-        <div><span class="eyebrow">Built for clarity</span><h2>Less noise. Better decisions.</h2></div>
-        <div class="about-copy"><p>SPulse is a product concept for transparent prediction markets on Stellar. This preview reads public network and pricing data in real time; the displayed markets are demonstrations, not active offers.</p><a href="https://stellar.org" target="_blank" rel="noreferrer">Learn about Stellar <svg><use href="#i-external" /></svg></a></div>
+      <section id="protocol" class="section container about-panel">
+        <div><span class="eyebrow">How the protocol works</span><h2>Rules users can inspect before they trade.</h2></div>
+        <div class="about-copy"><p>Positions are pooled in XLM. After a market closes, an authorized resolver publishes the outcome and the contract calculates each winning payout from the pool. The contract records fees by market and supports refunds when a market is cancelled.</p><p>Every Testnet transaction can be reviewed in Stellar Expert. Market resolution currently relies on authorized accounts; public feeds on this site are context, not automated oracles.</p><a href="https://stellar.org" target="_blank" rel="noreferrer">Why Stellar <svg><use href="#i-external" /></svg></a></div>
       </section>
 
       <section id="faq" class="section faq-section">
-        <div class="container faq-layout"><div><span class="eyebrow">Questions, answered</span><h2>Know before you trade</h2><p>Prediction markets reward correct outcomes, but every position carries risk.</p></div><div class="faq-list"><details open><summary>What is a prediction market?<svg><use href="#i-arrow" /></svg></summary><p>A market where participants take positions on verifiable future outcomes. Prices can reflect the crowd's current estimate of probability.</p></details><details><summary>Is this page processing real trades?<svg><use href="#i-arrow" /></svg></summary><p>No. Live price and network data are real, while orders and positions on this static preview are simulations.</p></details><details><summary>How would a market resolve?<svg><use href="#i-arrow" /></svg></summary><p>Each market identifies its resolution criteria and source before trading begins. The verified result determines the winning outcome.</p></details><details><summary>Why use Stellar?<svg><use href="#i-arrow" /></svg></summary><p>Stellar offers fast ledger settlement and low network fees, making it a strong foundation for frequent, small-value market activity.</p></details></div></div>
+        <div class="container faq-layout"><div><span class="eyebrow">Questions, answered</span><h2>Know before you trade</h2><p>Prediction markets reward correct outcomes, but every position carries risk.</p></div><div class="faq-list"><details open><summary>What is a prediction market?<svg><use href="#i-arrow" /></svg></summary><p>A market where participants take positions on verifiable future outcomes. Prices can reflect the crowd's current estimate of probability.</p></details><details><summary>Can I place a position here today?<svg><use href="#i-arrow" /></svg></summary><p>The configured Testnet market's published close date has passed, so it no longer accepts positions. The wallet and transaction integration demonstrates how a future open market will work. Testnet assets have no mainnet value.</p></details><details><summary>Who resolves a market?<svg><use href="#i-arrow" /></svg></summary><p>An authorized resolver submits the result after the close time. Public market data shown on this site does not trigger contract settlement automatically.</p></details><details><summary>Why build on Stellar?<svg><use href="#i-arrow" /></svg></summary><p>Stellar provides public, inspectable settlement and a direct path for users to hold and transfer assets with their own wallets.</p></details></div></div>
       </section>
 
-      <section class="cta-section"><div class="container cta-panel"><div><span class="eyebrow">Ready to explore?</span><h2>Put your market instinct to work.</h2><p>Start with a demonstration position and see the full product flow.</p></div><a href="#trade" class="button button-primary">Try the trading demo <svg><use href="#i-arrow" /></svg></a></div></section>
+      <section class="cta-section"><div class="container cta-panel"><div><span class="eyebrow">Built in public on Stellar</span><h2>Follow the market from question to settlement.</h2><p>Explore the deployed contract on Stellar Testnet.</p></div><a href="https://stellar.expert/explorer/testnet/contract/CAPCAPWPGPOCENAJFYYIE22WYNFEDVZ3CT73M5MAKILFMBQ5TN2MIS6T" target="_blank" rel="noreferrer" class="button button-primary">Inspect the market contract <svg><use href="#i-external" /></svg></a></div></section>
     </main>
 
-    <footer><div class="container footer-inner"><a class="brand" href="#top"><span class="brand-mark"><svg><use href="#i-pulse" /></svg></span><span>S<span>Pulse</span></span></a><p>Live public data. Demonstration markets only.</p><span>© <span id="year"></span> SPulse</span></div></footer>
+    <footer><div class="container footer-inner"><a class="brand" href="#top"><span class="brand-mark"><svg><use href="#i-star" /></svg></span><span>Stellar <span>Trade</span></span></a><p>Open source prediction markets, built on Stellar.</p><span>© <span id="year"></span> Stellar Trade</span></div></footer>
     <script type="module" src="wallet.js"></script>
     <script type="module" src="script.js"></script>
   </body>
