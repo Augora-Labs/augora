@@ -107,12 +107,15 @@
                 <div class="wallet-panel-copy"><strong id="wallet-panel-title">Testnet wallet</strong><span id="wallet-panel-detail">The configured market is past its close date</span></div>
                 <button type="button" id="wallet-panel-action">Connect</button>
               </div>
-              <fieldset><legend>Choose an outcome</legend><div class="outcome-buttons"><button type="button" class="outcome-button yes-choice active" data-outcome="yes"><span>Yes</span><strong id="yes-price">50%</strong></button><button type="button" class="outcome-button no-choice" data-outcome="no"><span>No</span><strong id="no-price">50%</strong></button></div></fieldset>
-              <label class="amount-label" for="stake-amount"><span>Stake amount</span><span>Testnet XLM only</span></label>
+              <fieldset><legend>Trade action</legend><div class="outcome-buttons trade-actions"><button type="button" class="outcome-button trade-action active" data-action="buy" aria-pressed="true">Buy</button><button type="button" class="outcome-button trade-action" data-action="sell" aria-pressed="false">Sell</button></div></fieldset>
+              <fieldset id="outcome-fieldset"><legend>Choose an outcome</legend><div class="outcome-buttons"><button type="button" class="outcome-button yes-choice active" data-outcome="yes" aria-pressed="true"><span>YES</span><strong id="yes-price">50%</strong></button><button type="button" class="outcome-button no-choice" data-outcome="no" aria-pressed="false"><span>NO</span><strong id="no-price">50%</strong></button></div></fieldset>
+              <p id="sell-note" class="sell-note" hidden>Sell reduces your existing position. Any refund is calculated by the contract; this is not a sale to another trader.</p>
+              <label class="amount-label" for="stake-amount"><span id="amount-label-text">Buy amount</span><span>Testnet XLM only</span></label>
               <div class="amount-input"><input id="stake-amount" type="number" min="1" max="1000" step="1" value="100" required /><span>XLM</span></div>
               <div class="quick-amounts"><button type="button" data-amount="25">25</button><button type="button" data-amount="50">50</button><button type="button" data-amount="100">100</button><button type="button" data-amount="250">250</button></div>
-              <dl class="order-summary"><div><dt>Illustrative price</dt><dd id="average-price">0.50 XLM</dd></div><div><dt>Estimated return*</dt><dd id="potential-return">200.00 XLM</dd></div><div><dt>Estimated profit*</dt><dd id="potential-profit">100.00 XLM</dd></div></dl>
-              <button class="button button-primary submit-order" id="submit-order" type="submit" disabled><span>Market closed</span> <svg><use href="#i-arrow" /></svg></button>
+              <dl class="order-summary" id="buy-summary"><div><dt>Illustrative price</dt><dd id="average-price">0.50 XLM</dd></div><div><dt>Estimated return*</dt><dd id="potential-return">200.00 XLM</dd></div><div><dt>Estimated profit*</dt><dd id="potential-profit">100.00 XLM</dd></div></dl>
+              <dl class="order-summary sell-summary" id="sell-summary" hidden><div><dt>Refund</dt><dd id="sell-refund">Calculated by contract</dd></div></dl>
+              <button class="button button-primary submit-order" id="submit-order" type="submit" disabled><span id="submit-order-label">Market closed</span> <svg><use href="#i-arrow" /></svg></button>
               <p class="order-disclaimer" id="order-disclaimer">*Estimates use illustrative probabilities, not live pool odds. Testnet XLM has no mainnet value.</p>
             </form>
           </div>

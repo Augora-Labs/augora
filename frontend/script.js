@@ -1,11 +1,11 @@
-import { placeBet, checkTransactionStatus } from "./soroban.js";
+import { placeBet, reducePosition, checkTransactionStatus } from "./soroban.js";
 
 const HORIZON_URL = "https://horizon.stellar.org";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3";
 const POSITION_STORAGE_KEY = "stellartrade:session-positions";
 const TESTNET_EXPLORER_PREFIX = "https://stellar.expert/explorer/testnet/tx/";
 
-const state = { price: null, change: null, selectedMarket: 0, outcome: "yes", positions: [] };
+const state = { price: null, change: null, selectedMarket: 0, action: "buy", outcome: "yes", positions: [] };
 const baseMarkets = [
   { category: "crypto", title: "Will XLM close above $0.50 by September 30, 2026?", detail: "Deployed Stellar Testnet market #3. Its published close date has passed; the app does not read current settlement state.", yes: 50, volume: "Closed · Testnet", close: "Closed Sep 30, 2026", onchainId: 3, acceptingPositions: false },
   { category: "network", title: "Will Stellar pass 70 million ledgers this year?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 68, volume: "Concept", close: "Example" },
@@ -143,6 +143,7 @@ function currentMarket() {
 }
 
 function updateOrderPreview() {
+  if (state.action === "sell") return;
   const market = currentMarket();
   const probability = state.outcome === "yes" ? market.yes : 100 - market.yes;
   const stake = Math.max(0, Number($("#stake-amount").value) || 0);
@@ -151,6 +152,28 @@ function updateOrderPreview() {
   $("#average-price").textContent = `${price.toFixed(2)} XLM`;
   $("#potential-return").textContent = `${returns.toFixed(2)} XLM`;
   $("#potential-profit").textContent = `${Math.max(0, returns - stake).toFixed(2)} XLM`;
+}
+
+function updateTradeAction() {
+  const selling = state.action === "sell";
+  $("#outcome-fieldset").hidden = selling;
+  $("#sell-note").hidden = !selling;
+  $("#buy-summary").hidden = selling;
+  $("#sell-summary").hidden = !selling;
+  $("#amount-label-text").textContent = selling ? "Sell amount" : "Buy amount";
+  $("#sell-refund").textContent = currentMarket().onchainId ? "Calculated by contract" : "Simulation only";
+  document.querySelectorAll("[data-action]").forEach((button) => {
+    const active = button.dataset.action === state.action;
+    button.classList.toggle("active", active);
+    button.setAttribute("aria-pressed", String(active));
+  });
+  const market = currentMarket();
+  const label = $("#submit-order-label");
+  if (market.onchainId && !market.acceptingPositions) label.textContent = "Market closed";
+  else label.textContent = market.onchainId
+    ? (selling ? "Sell position" : "Buy position")
+    : (selling ? "Preview sell" : "Preview buy");
+  updateOrderPreview();
 }
 
 function selectMarket(index, scroll = true) {
@@ -164,11 +187,9 @@ function selectMarket(index, scroll = true) {
   $("#trade-probability-bar").style.width = `${market.yes}%`;
   $("#yes-price").textContent = `${market.yes}%`;
   $("#no-price").textContent = `${100 - market.yes}%`;
-  const submitLabel = $("#submit-order span");
   const orderSubmit = $("#submit-order");
   const mode = $("#trade-mode");
   if (market.onchainId) {
-    submitLabel.textContent = "Market closed";
     orderSubmit.disabled = true;
     mode.innerHTML = '<svg><use href="#i-help" /></svg> Closed Testnet market';
     mode.classList.add("live");
@@ -176,15 +197,16 @@ function selectMarket(index, scroll = true) {
     $("#trade-status").classList.remove("online");
     $("#order-disclaimer").textContent = "The published close date has passed. The app does not read settlement status from the contract.";
   } else {
-    submitLabel.textContent = "Preview position";
     orderSubmit.disabled = false;
     mode.innerHTML = '<svg><use href="#i-help" /></svg> Simulation mode';
     mode.classList.remove("live");
     $("#trade-status").textContent = "Concept";
     $("#trade-status").classList.remove("online");
-    $("#order-disclaimer").textContent = "Preview only. No funds move; no live market pool, price, or resolution rules are configured.";
+    $("#order-disclaimer").textContent = state.action === "sell"
+      ? "Preview only. A simulated sell reduces a local demo position; no funds move."
+      : "Preview only. No funds move; no live market pool, price, or resolution rules are configured.";
   }
-  updateOrderPreview();
+  updateTradeAction();
   if (scroll) $("#trade").scrollIntoView({ behavior: "smooth" });
 }
 
@@ -263,10 +285,24 @@ $("#market-list").addEventListener("click", (event) => {
   if (button) selectMarket(Number(button.dataset.tradeIndex));
 });
 
+document.querySelectorAll("[data-action]").forEach((button) => button.addEventListener("click", () => {
+  state.action = button.dataset.action;
+  const market = currentMarket();
+  if (!market.onchainId) {
+    $("#order-disclaimer").textContent = state.action === "sell"
+      ? "Preview only. A simulated sell reduces a local demo position; no funds move."
+      : "Preview only. No funds move; no live market pool, price, or resolution rules are configured.";
+  }
+  updateTradeAction();
+}));
+
 document.querySelectorAll("[data-outcome]").forEach((button) => button.addEventListener("click", () => {
   state.outcome = button.dataset.outcome;
-  document.querySelectorAll("[data-outcome]").forEach((item) => item.classList.remove("active"));
-  button.classList.add("active");
+  document.querySelectorAll("[data-outcome]").forEach((item) => {
+    const active = item === button;
+    item.classList.toggle("active", active);
+    item.setAttribute("aria-pressed", String(active));
+  });
   updateOrderPreview();
 }));
 $("#stake-amount").addEventListener("input", updateOrderPreview);
@@ -277,7 +313,7 @@ $("#order-form").addEventListener("submit", async (event) => {
   const stake = Math.max(1, Math.min(1000, Number($("#stake-amount").value) || 1));
   const market = currentMarket();
   if (market.onchainId && !market.acceptingPositions) {
-    window.showWalletNotice("This Testnet market passed its published close date and no longer accepts positions.", true);
+    window.showWalletNotice("This Testnet market passed its published close date. Buys and sells are unavailable.", true);
     return;
   }
   const probability = state.outcome === "yes" ? market.yes : 100 - market.yes;
@@ -290,6 +326,29 @@ $("#order-form").addEventListener("submit", async (event) => {
   };
 
   if (!market.onchainId) {
+    if (state.action === "sell") {
+      const openPosition = [...state.positions].reverse().find((item) => item.title === market.title && !item.marketId && !item.hash);
+      if (!openPosition) {
+        window.showWalletNotice("There is no simulated position to sell for this market.", true);
+        return;
+      }
+      const remaining = Number(openPosition.stake) - stake;
+      if (remaining < 0) {
+        window.showWalletNotice(`You can sell up to ${openPosition.stake} XLM from this simulated position.`, true);
+        return;
+      }
+      if (remaining === 0) {
+        state.positions.splice(state.positions.indexOf(openPosition), 1);
+      } else {
+        const originalStake = Number(openPosition.stake);
+        openPosition.stake = remaining.toFixed(0);
+        openPosition.returns = (Number(openPosition.returns) * remaining / originalStake).toFixed(2);
+      }
+      savePositions();
+      renderPositions();
+      showToast("Simulated position reduced. No funds moved.");
+      return;
+    }
     state.positions.unshift(position);
     savePositions();
     renderPositions();
@@ -310,63 +369,75 @@ $("#order-form").addEventListener("submit", async (event) => {
     await wallet?.connect();
     return;
   }
-  if (walletState.balance === 0) {
+  if (state.action === "buy" && walletState.balance === 0) {
     window.showWalletNotice("Fund your Testnet wallet before placing a position.", true);
     return;
   }
-  if (Number.isFinite(walletState.balance) && stake + 1 > walletState.balance) {
+  if (state.action === "buy" && Number.isFinite(walletState.balance) && stake + 1 > walletState.balance) {
     window.showWalletNotice("Leave at least 1 test XLM available for account reserves and fees.", true);
     return;
   }
 
   const submit = $("#submit-order");
+  const action = state.action;
   const label = submit.querySelector("span");
   const originalLabel = label.textContent;
   submit.disabled = true;
+  document.querySelectorAll("[data-action], [data-outcome]").forEach((button) => { button.disabled = true; });
   inFlightMarkets.add(market.onchainId);
 
   let pendingPosition = null;
+  let pendingSell = null;
 
   try {
-    const transaction = await placeBet({
+    const submitTrade = action === "sell" ? reducePosition : placeBet;
+    const tradeArguments = {
       address: walletState.address,
       marketId: market.onchainId,
-      isYes: state.outcome === "yes",
       amountXlm: String(stake),
       signTransaction: wallet.signTransaction,
       onStatus: (status) => { label.textContent = status; },
       onSubmitted: ({ hash, explorerUrl }) => {
-        pendingPosition = {
-          ...position,
-          status: "pending",
-          hash,
-          explorerUrl,
-          marketId: market.onchainId,
-        };
-        state.positions.unshift(pendingPosition);
-        savePositions();
-        renderPositions();
-        showToast("Transaction submitted to Testnet. Waiting for confirmation...");
+        if (action === "sell") {
+          pendingSell = { hash, explorerUrl };
+          showToast("Sell submitted to Testnet. Waiting for confirmation...");
+        } else {
+          pendingPosition = {
+            ...position,
+            status: "pending",
+            hash,
+            explorerUrl,
+            marketId: market.onchainId,
+          };
+          state.positions.unshift(pendingPosition);
+          savePositions();
+          renderPositions();
+          showToast("Buy submitted to Testnet. Waiting for confirmation...");
+        }
       },
-    });
+    };
+    if (action === "buy") tradeArguments.isYes = state.outcome === "yes";
+    const transaction = await submitTrade(tradeArguments);
 
-    if (pendingPosition) {
-      pendingPosition.status = "confirmed";
-      pendingPosition.hash = transaction.hash;
-      pendingPosition.explorerUrl = transaction.explorerUrl;
-    } else {
-      state.positions.unshift({
-        ...position,
-        status: "confirmed",
-        explorerUrl: transaction.explorerUrl,
-        hash: transaction.hash,
-        marketId: market.onchainId,
-      });
+    if (action === "buy") {
+      if (pendingPosition) {
+        pendingPosition.status = "confirmed";
+        pendingPosition.hash = transaction.hash;
+        pendingPosition.explorerUrl = transaction.explorerUrl;
+      } else {
+        state.positions.unshift({
+          ...position,
+          status: "confirmed",
+          explorerUrl: transaction.explorerUrl,
+          hash: transaction.hash,
+          marketId: market.onchainId,
+        });
+      }
+      savePositions();
+      renderPositions();
     }
-    savePositions();
-    renderPositions();
     await wallet.refreshBalance();
-    showToast("Position confirmed on Stellar Testnet.");
+    showToast(action === "sell" ? "Sell confirmed. The contract returned the calculated refund." : "Buy confirmed on Stellar Testnet.");
     $("#activity").scrollIntoView({ behavior: "smooth" });
   } catch (error) {
     if (error?.name === "TransactionTimeoutError" || error?.explorerUrl) {
@@ -380,7 +451,13 @@ $("#order-form").addEventListener("submit", async (event) => {
         renderPositions();
         reconcilePendingPosition(pendingPosition);
       }
-      window.showWalletNotice("Transaction is still confirming on Stellar Testnet. It is recorded as pending in your positions.", false);
+      if (pendingPosition) {
+        window.showWalletNotice("Buy is still confirming on Stellar Testnet. It is recorded as pending in your positions.", false);
+      } else if (pendingSell) {
+        window.showWalletNotice(`Sell is still confirming on Stellar Testnet: ${pendingSell.explorerUrl}`, false);
+      } else {
+        window.showWalletNotice(error?.message || "The transaction is still confirming on Stellar Testnet.", false);
+      }
       $("#activity").scrollIntoView({ behavior: "smooth" });
     } else {
       if (pendingPosition) {
@@ -396,6 +473,7 @@ $("#order-form").addEventListener("submit", async (event) => {
   } finally {
     inFlightMarkets.delete(market.onchainId);
     submit.disabled = false;
+    document.querySelectorAll("[data-action], [data-outcome]").forEach((button) => { button.disabled = false; });
     label.textContent = originalLabel;
   }
 });

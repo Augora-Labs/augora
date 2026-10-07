@@ -45,6 +45,7 @@ function simulationError(error) {
       8: "This market has been cancelled.",
       10: "The position amount is below the 1 XLM contract minimum.",
       11: "A position already exists on the opposite outcome.",
+      13: "No open position was found for this market.",
       14: "The contract rejected the position amount.",
       17: "This account has reached the position limit for the market.",
     };
@@ -162,6 +163,64 @@ export async function placeBet({ address, marketId, isYes, amountXlm, signTransa
     explorerUrl,
     amountStroops: amount,
   };
+}
+
+export async function reducePosition({ address, marketId, amountXlm, signTransaction, onStatus, onSubmitted, pollAttempts = 60 }) {
+  if (!address) throw new Error("Connect a funded Testnet wallet first.");
+  if (!Number.isSafeInteger(marketId) || marketId < 1) throw new Error("Invalid on-chain market ID.");
+  if (typeof signTransaction !== "function") throw new Error("Wallet signing is unavailable.");
+
+  const amount = xlmToStroops(amountXlm);
+  const sdk = await loadSdk();
+  const { BASE_FEE, Contract, Networks, TransactionBuilder, nativeToScVal, rpc } = sdk;
+  const server = new rpc.Server(TESTNET.rpcUrl);
+  onStatus?.("Loading Testnet account");
+  const source = await server.getAccount(address);
+  const contract = new Contract(TESTNET.predictionMarketContract);
+  const transaction = new TransactionBuilder(source, {
+    fee: BASE_FEE,
+    networkPassphrase: Networks.TESTNET,
+  })
+    .addOperation(contract.call(
+      "reduce_position",
+      nativeToScVal(address, { type: "address" }),
+      nativeToScVal(BigInt(marketId), { type: "u64" }),
+      nativeToScVal(amount, { type: "i128" }),
+    ))
+    .setTimeout(60)
+    .build();
+
+  let prepared;
+  try {
+    onStatus?.("Simulating sell transaction");
+    prepared = await server.prepareTransaction(transaction);
+  } catch (error) {
+    throw new Error(simulationError(error));
+  }
+
+  onStatus?.("Confirm in Freighter");
+  const signed = await signTransaction(prepared.toXDR(), {
+    address,
+    networkPassphrase: TESTNET.networkPassphrase,
+  });
+  if (!signed?.signedTxXdr) throw new Error(signed?.error?.message || "Wallet signing was cancelled.");
+
+  const signedTransaction = TransactionBuilder.fromXDR(signed.signedTxXdr, Networks.TESTNET);
+  onStatus?.("Submitting sell to Testnet");
+  const submission = await server.sendTransaction(signedTransaction);
+  if (submission.status !== "PENDING") {
+    const errorDetail = submission.errorResultXdr || (submission.errorResult ? JSON.stringify(submission.errorResult) : submission.status);
+    const err = new Error(`Stellar RPC rejected transaction (${submission.status}): ${errorDetail}`);
+    err.status = submission.status;
+    err.errorResult = submission.errorResult;
+    throw err;
+  }
+
+  const explorerUrl = `${TESTNET.explorerUrl}/${submission.hash}`;
+  onSubmitted?.({ hash: submission.hash, explorerUrl, amountStroops: amount });
+  onStatus?.("Waiting for confirmation");
+  await waitForTransaction(server, submission.hash, explorerUrl, pollAttempts, onStatus);
+  return { hash: submission.hash, explorerUrl, amountStroops: amount };
 }
 
 export const units = Object.freeze({ xlmToStroops });

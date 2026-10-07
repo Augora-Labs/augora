@@ -1,6 +1,6 @@
 # Stellar Trade
 
-Stellar Trade is an open-source prediction market prototype built with Soroban on Stellar. Participants take a position on a clear YES-or-NO question, then inspect the pooled XLM settlement on the public ledger.
+Stellar Trade is an open-source prediction market prototype built with Soroban on Stellar. Participants buy a YES or NO position on a clear market question, then inspect pooled XLM settlement on the public ledger. They can sell by reducing an open position before the market closes.
 
 Markets make forecasts concrete: participants commit value, market rules define when a question closes, and settlement follows a recorded outcome. The contracts support proportional pool payouts, market-scoped fee accounting, cancellation refunds, referral rewards, and an onchain record of forecasting performance. The current prototype uses authorized resolvers, so resolver accountability and evidence are central parts of the product roadmap.
 
@@ -14,10 +14,14 @@ The core experiment is whether a small market can make its question, stake, fees
 
 The next milestones are to load market terms and status directly from Soroban, publish objective resolution criteria and evidence, connect rankings to contract data, and complete an independent security review before any production launch.
 
+## Buy and sell actions
+
+**Buy** adds an XLM stake to the selected YES or NO outcome. **Sell** reduces the participant's existing position through the contract's `reduce_position` operation; the contract calculates the refund from the amount reduced and applicable fee rules. Sell does not transfer a position to another trader or open a short position. The current deployed Testnet market is expired, so it accepts neither action. Concept markets run in local simulation mode and move no funds.
+
 ## What works today
 
 - Four Soroban contracts for prediction markets, a reward asset, referrals, and rankings, plus cross-contract invariant tests. The Rust workspace lives in the adjacent [`stellar-trade-contracts`](../stellar-trade-contracts) repository.
-- A static browser app with public Stellar mainnet and XLM price data, Freighter wallet connection, Testnet transaction simulation and signing, submission, confirmation polling, and explorer links.
+- A static browser app with public Stellar mainnet and XLM price data, Freighter wallet connection, transaction builders for Testnet buys and position reductions, confirmation polling, and explorer links. The configured Testnet market is expired, so those transactions cannot currently be submitted against it.
 - Deployed Testnet contracts. The configured market #3 was published to close on September 30, 2026. That date has passed; the app does not yet read current market resolution state or load market terms from the contract. The wallet integration demonstrates the transaction path; no position can currently be placed in that market.
 - Market catalog and leaderboard pages that illustrate the product direction. Their sample odds and rankings are explicitly labeled and are not live contract data.
 

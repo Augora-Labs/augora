@@ -68,6 +68,10 @@ h1 span { color: #147d55; }
 .resolution-grid div { border-color: #dfe8e1; }
 .resolution-grid span, .amount-label span:last-child { color: #6d7b72; }
 .outcome-button { border-color: #dfe8e1; background: #f8faf8; color: #64736a; }
+.trade-action.active { border-color: #9bccaa; background: #e9f5ec; color: #147d55; }
+.sell-note { color: #718077; font-size: 12px; line-height: 1.5; }
+.sell-summary { margin-top: 18px; }
+#outcome-fieldset[hidden], #sell-note[hidden], #buy-summary[hidden], #sell-summary[hidden] { display: none; }
 .yes-choice.active { border-color: #9bccaa; background: #e9f5ec; color: #147d55; }
 .no-choice.active { border-color: #e6b5af; background: #fbefed; color: #b54d43; }
 .amount-input { border-color: #dfe8e1; }
