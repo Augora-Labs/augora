@@ -1,4 +1,5 @@
 import { placeBet, reducePosition, checkTransactionStatus } from "./soroban.js";
+import { fetchJson } from "./fetch.js";
 
 const HORIZON_URL = "https://horizon.stellar.org";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3";
@@ -55,16 +56,6 @@ const formatPrice = (value) => new Intl.NumberFormat("en-US", { style: "currency
 
 function setUpdated() {
   $("#last-updated").textContent = new Intl.DateTimeFormat("en", { hour: "2-digit", minute: "2-digit", second: "2-digit" }).format(new Date());
-}
-
-async function fetchJson(url, timeout = 9000) {
-  const controller = new AbortController();
-  const timer = setTimeout(() => controller.abort(), timeout);
-  try {
-    const response = await fetch(url, { signal: controller.signal, headers: { Accept: "application/json" } });
-    if (!response.ok) throw new Error(`Request failed: ${response.status}`);
-    return await response.json();
-  } finally { clearTimeout(timer); }
 }
 
 async function updateNetwork() {
