@@ -1,9 +1,9 @@
-import { placeBet, reducePosition, checkTransactionStatus } from "./soroban.js";
+import { placeBet, reducePosition, checkTransactionStatus, TESTNET } from "./soroban.js";
 
 const HORIZON_URL = "https://horizon.stellar.org";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3";
 const POSITION_STORAGE_KEY = "stellartrade:session-positions";
-const TESTNET_EXPLORER_PREFIX = "https://stellar.expert/explorer/testnet/tx/";
+const TESTNET_EXPLORER_PREFIX = `${TESTNET.explorerUrl}/`;
 
 const state = { price: null, change: null, selectedMarket: 0, action: "buy", outcome: "yes", positions: [] };
 const baseMarkets = [
