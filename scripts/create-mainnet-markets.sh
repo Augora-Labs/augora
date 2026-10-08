@@ -88,8 +88,11 @@ python3 -c "
 import json
 markets = json.load(open('$MARKETS_FILE'))
 for m in markets:
-    secs = m.get('duration_secs', m['duration_days'] * 86400)
-    resolves = m.get('resolves', f\"{m['duration_days']} days\")
+    if m.get('duration_secs') is None and m.get('days') is None:
+        raise SystemExit('Market {}: missing duration_secs and days'.format(m.get('id', '?')))
+for m in markets:
+    secs = m['duration_secs'] if m.get('duration_secs') is not None else m['days'] * 86400
+    resolves = m.get('resolves') or (str(m['days']) + ' days' if m.get('days') is not None else f'{secs / 86400:g} days')
     print(f\"{m['id']}|{m['category']}|{m['question']}|{m['image_url']}|{secs}|{resolves}\")
 " | while IFS='|' read -r IDX CATEGORY QUESTION IMAGE_URL DURATION_SECS RESOLVES; do
 
