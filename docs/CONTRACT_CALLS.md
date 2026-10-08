@@ -126,7 +126,7 @@ const placeBetArgs = {
 const resolveMarketArgs = {
   method: "resolve_market",
   args: {
-    admin: adminAddress,
+    caller: adminAddress,
     market_id: 1,
     outcome: true,
   },
