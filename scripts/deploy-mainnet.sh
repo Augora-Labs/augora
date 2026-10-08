@@ -94,13 +94,22 @@ success "Balance sufficient: $BALANCE XLM"
 
 # ── Verify WASM builds exist ───────────────────────────────────────────────────
 step "Verifying WASM builds"
+missing_wasm=()
 for WASM in stellar_trade_token leaderboard referral_registry prediction_market; do
   if [[ ! -f "$WASM_DIR/$WASM.wasm" ]]; then
-    warn "Missing $WASM.wasm — rebuilding..."
-    cd "$CONTRACTS_DIR"
-    cargo build --target wasm32v1-none --release --quiet
-    break
+    missing_wasm+=("$WASM")
   fi
+done
+
+if (( ${#missing_wasm[@]} > 0 )); then
+  warn "Missing WASM artifacts: ${missing_wasm[*]} — rebuilding workspace before any deployment"
+  (cd "$CONTRACTS_DIR" && cargo build --workspace --target wasm32v1-none --release --quiet) \
+    || error "Failed to rebuild missing WASM artifacts: ${missing_wasm[*]}"
+fi
+
+# A successful cargo invocation alone does not guarantee every required file exists.
+for WASM in stellar_trade_token leaderboard referral_registry prediction_market; do
+  [[ -f "$WASM_DIR/$WASM.wasm" ]] || error "Missing $WASM.wasm after build; aborting before mainnet deployment"
 done
 ls -lh "$WASM_DIR"/*.wasm | awk '{print "  "$5, $9}'
 success "All WASM files present"
@@ -258,12 +267,25 @@ echo ""
 echo -e "${YELLOW}  ⚠️  DO NOT auto-update .env.local until you have verified${NC}"
 echo -e "${YELLOW}     the contract IDs on stellar.expert above.${NC}"
 echo ""
+# Never offer a paste-ready environment block with blank or aliased contract IDs.
+for contract_id in "$TOKEN_ID" "$LEADERBOARD_ID" "$REFERRAL_ID" "$MARKET_ID"; do
+  [[ -n "$contract_id" ]] || error "An expected contract ID is empty; refusing to print frontend environment values"
+  count=0
+  for other in "$TOKEN_ID" "$LEADERBOARD_ID" "$REFERRAL_ID" "$MARKET_ID"; do
+    if [[ "$contract_id" == "$other" ]]; then
+      count=$((count + 1))
+    fi
+  done
+  [[ "$count" -eq 1 ]] || error "Contract IDs are not distinct; refusing to print frontend environment values"
+done
+success "All four deployed contract IDs are populated and distinct"
+
 echo -e "  When verified, paste into ${BOLD}frontend/.env.local${NC}:"
 echo ""
 cat << ENVBLOCK
 NEXT_PUBLIC_MARKET_CONTRACT_ID=$MARKET_ID
 NEXT_PUBLIC_TOKEN_CONTRACT_ID=$TOKEN_ID
-NEXT_PUBLIC_REFERRAL_CONTRACT_ID=$LEADERBOARD_ID
+NEXT_PUBLIC_REFERRAL_CONTRACT_ID=$REFERRAL_ID
 NEXT_PUBLIC_LEADERBOARD_CONTRACT_ID=$LEADERBOARD_ID
 NEXT_PUBLIC_XLM_SAC_ID=$XLM_SAC
 NEXT_PUBLIC_ADMIN_PUBLIC_KEY=$DEPLOYER
