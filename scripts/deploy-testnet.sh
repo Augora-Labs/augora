@@ -1,4 +1,4 @@
-﻿#!/usr/bin/env bash
+#!/usr/bin/env bash
 # =============================================================================
 # STRD — Testnet Deploy Script
 # =============================================================================
@@ -332,7 +332,7 @@ echo -e "  Explorer: https://testnet.stellar.expert/explorer/testnet"
 echo -e "  Output:   deploy-output.json"
 echo ""
 echo -e "  ${YELLOW}Next steps:${NC}"
-echo -e "  1. cd frontend && python -m http.server 8080"
+echo -e "  1. python3 -m http.server 8080 --directory frontend"
 echo -e "  2. bash scripts/smoke-test.sh   (run quick function tests)"
 echo -e "  3. Open the app and place a test bet"
 echo ""
