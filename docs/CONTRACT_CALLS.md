@@ -33,6 +33,7 @@ identity or metadata of contracts already deployed at these addresses.
 | Method | Arguments | Result |
 |--------|-----------|--------|
 | `place_bet` | `user`, `market_id`, `is_yes`, `amount` | Records or increases a YES/NO bet after applying fees. |
+| `reduce_position` | `user`, `market_id`, `amount` | Reduces an existing position before market close and refunds proportional stake. |
 | `resolve_market` | `caller`, `market_id`, `outcome` | An authorized account resolves the market with a YES/NO outcome. |
 | `claim` | `user`, `market_id` | Claims winnings, points, and token rewards for an eligible user. |
 
@@ -58,6 +59,28 @@ Notes:
 - `market_id` is the numeric market identifier.
 - `is_yes=true` places a YES bet; `false` places a NO bet.
 - `amount` should be passed in the token's smallest unit.
+
+## Example: reduce_position
+
+Use `reduce_position` before close to reduce an existing position stake.
+
+```bash
+soroban contract invoke \
+  --rpc-url "$STELLAR_RPC_URL" \
+  --network-passphrase "$STELLAR_NETWORK_PASSPHRASE" \
+  --id "$PREDICTION_MARKET_ID" \
+  --source "$USER_SECRET_KEY" \
+  -- \
+  reduce_position \
+  --user "$USER_ADDRESS" \
+  --market_id 1 \
+  --amount 5000000
+```
+
+Notes:
+- `market_id` is the numeric market identifier.
+- `amount` should be passed in the token's smallest unit (stroops).
+- Only valid before the market close time.
 
 ## Example: resolve_market
 
@@ -123,10 +146,19 @@ const placeBetArgs = {
   },
 };
 
+const reducePositionArgs = {
+  method: "reduce_position",
+  args: {
+    user: userAddress,
+    market_id: 1,
+    amount: "5000000",
+  },
+};
+
 const resolveMarketArgs = {
   method: "resolve_market",
   args: {
-    admin: adminAddress,
+    caller: adminAddress,
     market_id: 1,
     outcome: true,
   },
@@ -199,8 +231,9 @@ while (status.status === "NOT_FOUND") {
 console.log(status.status); // SUCCESS | FAILED
 ```
 
-`resolve_market` and `claim` follow the same pattern with their argument lists
-from the ABI table (`resolve_market`: caller address, `u64` market id, `bool`
+`reduce_position`, `resolve_market`, and `claim` follow the same pattern with their argument lists
+from the ABI table (`reduce_position`: user address, `u64` market id, `i128`
+amount; `resolve_market`: caller address, `u64` market id, `bool`
 outcome; `claim`: user address, `u64` market id).
 
 ## Read-only queries (no signing)
