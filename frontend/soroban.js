@@ -96,7 +96,20 @@ async function waitForTransaction(server, hash, explorerUrl, attempts = 60, onSt
   );
 }
 
-export async function placeBet({ address, marketId, isYes, amountXlm, signTransaction, onStatus, onSubmitted, pollAttempts = 60 }) {
+async function submitContractCall({
+  address,
+  marketId,
+  amountXlm,
+  method,
+  buildArgs,
+  signTransaction,
+  onStatus,
+  onSubmitted,
+  pollAttempts = 60,
+  simulatingStatus = "Simulating contract call",
+  submittingStatus = "Submitting to Testnet",
+  cancelErrorMessage = "Transaction signing was cancelled.",
+}) {
   if (!address) throw new Error("Connect a funded Testnet wallet first.");
   if (!Number.isSafeInteger(marketId) || marketId < 1) throw new Error("Invalid on-chain market ID.");
   if (typeof signTransaction !== "function") throw new Error("Wallet signing is unavailable.");
@@ -114,18 +127,15 @@ export async function placeBet({ address, marketId, isYes, amountXlm, signTransa
     networkPassphrase: Networks.TESTNET,
   })
     .addOperation(contract.call(
-      "place_bet",
-      nativeToScVal(address, { type: "address" }),
-      nativeToScVal(BigInt(marketId), { type: "u64" }),
-      nativeToScVal(Boolean(isYes), { type: "bool" }),
-      nativeToScVal(amount, { type: "i128" }),
+      method,
+      ...buildArgs({ address, marketId, amount, nativeToScVal }),
     ))
     .setTimeout(60)
     .build();
 
   let prepared;
   try {
-    onStatus?.("Simulating contract call");
+    onStatus?.(simulatingStatus);
     prepared = await server.prepareTransaction(transaction);
   } catch (error) {
     throw new Error(simulationError(error));
@@ -136,10 +146,10 @@ export async function placeBet({ address, marketId, isYes, amountXlm, signTransa
     address,
     networkPassphrase: TESTNET.networkPassphrase,
   });
-  if (!signed?.signedTxXdr) throw new Error(signed?.error?.message || "Transaction signing was cancelled.");
+  if (!signed?.signedTxXdr) throw new Error(signed?.error?.message || cancelErrorMessage);
 
   const signedTransaction = TransactionBuilder.fromXDR(signed.signedTxXdr, Networks.TESTNET);
-  onStatus?.("Submitting to Testnet");
+  onStatus?.(submittingStatus);
   const submission = await server.sendTransaction(signedTransaction);
   if (submission.status !== "PENDING") {
     const errorDetail = submission.errorResultXdr || (submission.errorResult ? JSON.stringify(submission.errorResult) : submission.status);
@@ -165,62 +175,47 @@ export async function placeBet({ address, marketId, isYes, amountXlm, signTransa
   };
 }
 
-export async function reducePosition({ address, marketId, amountXlm, signTransaction, onStatus, onSubmitted, pollAttempts = 60 }) {
-  if (!address) throw new Error("Connect a funded Testnet wallet first.");
-  if (!Number.isSafeInteger(marketId) || marketId < 1) throw new Error("Invalid on-chain market ID.");
-  if (typeof signTransaction !== "function") throw new Error("Wallet signing is unavailable.");
+export async function placeBet({ address, marketId, isYes, amountXlm, signTransaction, onStatus, onSubmitted, pollAttempts = 60 }) {
+  return submitContractCall({
+    address,
+    marketId,
+    amountXlm,
+    method: "place_bet",
+    buildArgs: ({ address, marketId, amount, nativeToScVal }) => [
+      nativeToScVal(address, { type: "address" }),
+      nativeToScVal(BigInt(marketId), { type: "u64" }),
+      nativeToScVal(Boolean(isYes), { type: "bool" }),
+      nativeToScVal(amount, { type: "i128" }),
+    ],
+    signTransaction,
+    onStatus,
+    onSubmitted,
+    pollAttempts,
+    simulatingStatus: "Simulating contract call",
+    submittingStatus: "Submitting to Testnet",
+    cancelErrorMessage: "Transaction signing was cancelled.",
+  });
+}
 
-  const amount = xlmToStroops(amountXlm);
-  const sdk = await loadSdk();
-  const { BASE_FEE, Contract, Networks, TransactionBuilder, nativeToScVal, rpc } = sdk;
-  const server = new rpc.Server(TESTNET.rpcUrl);
-  onStatus?.("Loading Testnet account");
-  const source = await server.getAccount(address);
-  const contract = new Contract(TESTNET.predictionMarketContract);
-  const transaction = new TransactionBuilder(source, {
-    fee: BASE_FEE,
-    networkPassphrase: Networks.TESTNET,
-  })
-    .addOperation(contract.call(
-      "reduce_position",
+export async function reducePosition({ address, marketId, amountXlm, signTransaction, onStatus, onSubmitted, pollAttempts = 60 }) {
+  return submitContractCall({
+    address,
+    marketId,
+    amountXlm,
+    method: "reduce_position",
+    buildArgs: ({ address, marketId, amount, nativeToScVal }) => [
       nativeToScVal(address, { type: "address" }),
       nativeToScVal(BigInt(marketId), { type: "u64" }),
       nativeToScVal(amount, { type: "i128" }),
-    ))
-    .setTimeout(60)
-    .build();
-
-  let prepared;
-  try {
-    onStatus?.("Simulating sell transaction");
-    prepared = await server.prepareTransaction(transaction);
-  } catch (error) {
-    throw new Error(simulationError(error));
-  }
-
-  onStatus?.("Confirm in Freighter");
-  const signed = await signTransaction(prepared.toXDR(), {
-    address,
-    networkPassphrase: TESTNET.networkPassphrase,
+    ],
+    signTransaction,
+    onStatus,
+    onSubmitted,
+    pollAttempts,
+    simulatingStatus: "Simulating sell transaction",
+    submittingStatus: "Submitting sell to Testnet",
+    cancelErrorMessage: "Wallet signing was cancelled.",
   });
-  if (!signed?.signedTxXdr) throw new Error(signed?.error?.message || "Wallet signing was cancelled.");
-
-  const signedTransaction = TransactionBuilder.fromXDR(signed.signedTxXdr, Networks.TESTNET);
-  onStatus?.("Submitting sell to Testnet");
-  const submission = await server.sendTransaction(signedTransaction);
-  if (submission.status !== "PENDING") {
-    const errorDetail = submission.errorResultXdr || (submission.errorResult ? JSON.stringify(submission.errorResult) : submission.status);
-    const err = new Error(`Stellar RPC rejected transaction (${submission.status}): ${errorDetail}`);
-    err.status = submission.status;
-    err.errorResult = submission.errorResult;
-    throw err;
-  }
-
-  const explorerUrl = `${TESTNET.explorerUrl}/${submission.hash}`;
-  onSubmitted?.({ hash: submission.hash, explorerUrl, amountStroops: amount });
-  onStatus?.("Waiting for confirmation");
-  await waitForTransaction(server, submission.hash, explorerUrl, pollAttempts, onStatus);
-  return { hash: submission.hash, explorerUrl, amountStroops: amount };
 }
 
 export const units = Object.freeze({ xlmToStroops });
