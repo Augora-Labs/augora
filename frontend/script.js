@@ -249,6 +249,7 @@ function reconcilePendingPosition(position) {
   if (!position?.hash || position.status !== "pending") return;
   let attempts = 0;
   const pollTimer = setInterval(async () => {
+    if (document.hidden) return;
     attempts += 1;
     if (attempts > 30 || position.status !== "pending") {
       clearInterval(pollTimer);
@@ -514,7 +515,35 @@ renderMarkets();
 selectMarket(0, false);
 renderPositions();
 state.positions.filter((p) => p.status === "pending" && p.hash).forEach(reconcilePendingPosition);
+let networkInterval = null;
+let priceInterval = null;
+
+function startPolling() {
+  if (!networkInterval) networkInterval = setInterval(updateNetwork, 10000);
+  if (!priceInterval) priceInterval = setInterval(updatePrice, 60000);
+}
+
+function stopPolling() {
+  if (networkInterval) {
+    clearInterval(networkInterval);
+    networkInterval = null;
+  }
+  if (priceInterval) {
+    clearInterval(priceInterval);
+    priceInterval = null;
+  }
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) {
+    stopPolling();
+  } else {
+    updateNetwork();
+    updatePrice();
+    startPolling();
+  }
+});
+
 updateNetwork();
 updatePrice();
-setInterval(updateNetwork, 10000);
-setInterval(updatePrice, 60000);
+startPolling();
