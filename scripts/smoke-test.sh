@@ -95,6 +95,10 @@ xlm_balance() {
 }
 
 # ── 1. Create test accounts ────────────────────────────────────────────────────
+# Remove throwaway accounts on both success and early exit under set -e.
+# Arm the cleanup only when the script reaches account creation.
+trap 'stellar keys rm --force smoke-alice smoke-bob smoke-charlie 2>/dev/null || true' EXIT
+
 step "1. Creating test accounts"
 
 info "Generating Alice (bettor + referrer flow)..."
@@ -197,7 +201,7 @@ ALICE_BET=$(invoke --id "$MARKET_ID" \
 if [[ "$ALICE_BET" == "98000000" ]]; then
   pass "Bet stored: 98000000 stroops net (9.8 XLM — correct after 2% fee)"
 else
-  pass "Bet stored: $ALICE_BET stroops net"
+  fail "Bet stored: $ALICE_BET stroops net (expected 98000000 after 2% fee)"
 fi
 
 # Verify gross tracked
@@ -413,11 +417,3 @@ else
   echo -e "${BOLD}${RED}╚══════════════════════════════════════╝${NC}"
   exit 1
 fi
-
-# ── Clean up test identities ───────────────────────────────────────────────────
-echo ""
-info "Cleaning up test key identities..."
-stellar keys rm --force smoke-alice 2>/dev/null || true
-stellar keys rm --force smoke-bob 2>/dev/null || true
-stellar keys rm --force smoke-charlie 2>/dev/null || true
-success "Test identities removed"
