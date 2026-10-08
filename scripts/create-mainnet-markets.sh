@@ -53,7 +53,7 @@ python3 -c "
 import json
 markets = json.load(open('$MARKETS_FILE'))
 for m in markets:
-    resolves = m.get('resolves', f'{m[\"duration_days\"]} days')
+    resolves = m.get('resolves') or f'{m[\"days\"]} days'
     print(f'  [{m[\"id\"]}] {m[\"category\"]:15} Resolves: {resolves}')
     print(f'       {m[\"question\"][:75]}')
     print()
