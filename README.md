@@ -77,6 +77,8 @@ These are existing pre-rebrand Testnet deployment addresses. The reward asset at
 | Referral registry | `CCKVUVYXR6FBB4VFYGDF3IDDUVBRJGKPDDRABTZYKI2LKAJNVLF3TTQ2` | Existing Testnet deployment |
 | Leaderboard | `CCMNYMUI4XMDBTTMM7E6KNQFF3OVKS3Q2ERJ4EVQGCLW4VQCGUGG2AQM` | Existing Testnet deployment |
 
+The browser market address is maintained in `frontend/contract-config.js` and imported by the Soroban client; the public explorer link is populated from that same value. After a reviewed Testnet redeployment, run `node scripts/sync-contract-config.mjs` against the ignored `deploy-output.json` and update the **Prediction market** deployment row above in the same change. Keep the README and browser config aligned; an additional CI mismatch check is still outstanding under issue #99. Do not use a Mainnet contract address with the Testnet wallet flow.
+
 Inspect the contracts and transactions on [Stellar Expert Testnet](https://stellar.expert/explorer/testnet). The browser app currently uses market #3, which was published to close on September 30, 2026. It does not yet load market terms or resolution status from Soroban. Do not treat the page's sample odds, rankings, or local demo positions as current ledger state.
 
 ## Prerequisites
