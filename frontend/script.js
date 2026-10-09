@@ -1,4 +1,7 @@
-import { placeBet, reducePosition, checkTransactionStatus } from "./soroban.js";
+import { TESTNET, placeBet, reducePosition, checkTransactionStatus } from "./soroban.js";
+
+const contractExplorer = document.querySelector("[data-contract-explorer]");
+if (contractExplorer) contractExplorer.href = `https://stellar.expert/explorer/testnet/contract/${TESTNET.predictionMarketContract}`;
 
 const HORIZON_URL = "https://horizon.stellar.org";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3";
