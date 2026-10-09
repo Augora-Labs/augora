@@ -17,7 +17,7 @@ function drawMarkets() {
   list.innerHTML = items.map((market) => `<article class="market-card">
     <div class="market-card-header"><span class="category">${market.category}</span><span class="market-badge">Illustration</span></div>
     <h3>${market.title}</h3><p>Example market question. Resolution criteria and a live market pool are not configured for this preview.</p>
-    <div class="probability" aria-label="Illustrative probability only"><span style="width:${market.yes}%"></span></div>
+    <div class="probability" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${market.yes}" aria-valuetext="Sample ${market.yes}% Yes" aria-label="Illustrative probability only"><span style="width:${market.yes}%" aria-hidden="true"></span></div>
     <div class="outcomes"><strong class="yes">Sample ${market.yes}%</strong><strong class="no">Sample ${100 - market.yes}%</strong></div>
     <div class="market-card-action"><span class="market-close">Example close: ${market.close}</span><a class="trade-link" href="index.html#trade">View Testnet market →</a></div>
   </article>`).join("") || '<div class="no-results">No markets match your search.</div>';

@@ -94,10 +94,10 @@
         <div class="container">
           <div class="section-heading"><div><span class="eyebrow">Testnet transaction flow</span><h2>Explore the position interface</h2><p>The connected Testnet market has passed its published close date. This panel shows the transaction flow and illustrative estimates.</p></div><span class="demo-notice" id="trade-mode"><svg><use href="#i-help" /></svg> Testnet</span></div>
           <div class="trade-layout">
-            <div class="trade-market-panel">
-              <div class="trade-title-row"><div><span id="trade-category" class="category">Crypto</span><h3 id="trade-title">Will XLM close above $0.50 by September 30, 2026?</h3></div><span id="trade-status" class="status-pill">Close date passed</span></div>
+            <div class="trade-market-panel" role="region" aria-label="Trade market summary" aria-live="polite">
+              <div class="trade-title-row"><div><span id="trade-category" class="category">Crypto</span><h3 id="trade-title">Will XLM close above $0.50 by September 30, 2026?</h3></div><span id="trade-status" class="status-pill" role="status" aria-live="polite">Close date passed</span></div>
               <p id="trade-detail">Resolves using the CoinGecko XLM/USD daily close at 23:59 UTC on the final day of the month.</p>
-            <div class="trade-chart-wrap"><div class="trade-chart-head"><span>Illustrative probability · not live pool odds</span><strong id="trade-probability">Sample 50% Yes</strong></div><div class="large-probability"><span id="trade-probability-bar" style="width:50%"></span></div><div class="chart-scale"><span>0%</span><span>50%</span><span>100%</span></div></div>
+            <div class="trade-chart-wrap"><div class="trade-chart-head"><span>Illustrative probability · not live pool odds</span><strong id="trade-probability" role="status" aria-live="polite">Sample 50% Yes</strong></div><div class="large-probability" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="50" aria-valuetext="Sample 50% Yes" aria-label="Illustrative probability"><span id="trade-probability-bar" style="width:50%" aria-hidden="true"></span></div><div class="chart-scale"><span>0%</span><span>50%</span><span>100%</span></div></div>
               <div class="resolution-grid"><div><span>Resolution source</span><strong>CoinGecko</strong></div><div><span>Closing</span><strong id="trade-close">Month end</strong></div><div><span>Settlement</span><strong>Stellar mainnet</strong></div></div>
             </div>
             <form id="order-form" class="order-panel">
@@ -115,7 +115,7 @@
               <div class="quick-amounts"><button type="button" data-amount="25">25</button><button type="button" data-amount="50">50</button><button type="button" data-amount="100">100</button><button type="button" data-amount="250">250</button></div>
               <dl class="order-summary" id="buy-summary"><div><dt>Illustrative price</dt><dd id="average-price">0.50 XLM</dd></div><div><dt>Estimated return*</dt><dd id="potential-return">200.00 XLM</dd></div><div><dt>Estimated profit*</dt><dd id="potential-profit">100.00 XLM</dd></div></dl>
               <dl class="order-summary sell-summary" id="sell-summary" hidden><div><dt>Refund</dt><dd id="sell-refund">Calculated by contract</dd></div></dl>
-              <button class="button button-primary submit-order" id="submit-order" type="submit" disabled><span id="submit-order-label">Market closed</span> <svg><use href="#i-arrow" /></svg></button>
+              <button class="button button-primary submit-order" id="submit-order" type="submit" disabled><span id="submit-order-label" aria-live="polite">Market closed</span> <svg><use href="#i-arrow" /></svg></button>
               <p class="order-disclaimer" id="order-disclaimer">*Estimates use illustrative probabilities, not live pool odds. Testnet XLM has no mainnet value.</p>
             </form>
           </div>
