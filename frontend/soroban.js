@@ -1,3 +1,5 @@
+import { MARKET_CONTRACT_ID } from "./contract-config.js";
+
 const LOCAL_SDK_PATH = "./vendor/stellar-sdk.js";
 const SDK_URL = "https://esm.sh/@stellar/stellar-sdk@14.5.0?bundle";
 
@@ -5,7 +7,7 @@ export const TESTNET = Object.freeze({
   rpcUrl: "https://soroban-testnet.stellar.org",
   networkPassphrase: "Test SDF Network ; September 2015",
   explorerUrl: "https://stellar.expert/explorer/testnet/tx",
-  predictionMarketContract: "CAPCAPWPGPOCENAJFYYIE22WYNFEDVZ3CT73M5MAKILFMBQ5TN2MIS6T",
+  predictionMarketContract: MARKET_CONTRACT_ID,
 });
 
 let sdkPromise;
