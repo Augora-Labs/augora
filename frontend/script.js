@@ -7,25 +7,27 @@ const TESTNET_EXPLORER_PREFIX = "https://stellar.expert/explorer/testnet/tx/";
 
 const state = { price: null, change: null, selectedMarket: 0, action: "buy", outcome: "yes", positions: [] };
 const baseMarkets = [
-  { category: "crypto", title: "Will XLM close above $0.50 by September 30, 2026?", detail: "Deployed Stellar Testnet market #3. Its published close date has passed; the app does not read current settlement state.", yes: 50, volume: "Closed · Testnet", close: "Closed Sep 30, 2026", onchainId: 3, acceptingPositions: false },
-  { category: "network", title: "Will Stellar pass 70 million ledgers this year?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 68, volume: "Concept", close: "Example" },
-  { category: "network", title: "Will average ledger close stay below 6 seconds?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 76, volume: "Concept", close: "Example" },
-  { category: "crypto", title: "Will XLM gain 10% over the next seven days?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 47, volume: "Concept", close: "Example" },
-  { category: "network", title: "Will mainnet process 100+ operations in one ledger?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 61, volume: "Concept", close: "Example" },
-  { category: "crypto", title: "Will XLM outperform Bitcoin this month?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 43, volume: "Concept", close: "Example" },
+  { marketId: 3, category: "crypto", title: "Will XLM close above $0.50 by September 30, 2026?", detail: "Deployed Stellar Testnet market #3. Its published close date has passed; the app does not read current settlement state.", yes: 50, volume: "Closed · Testnet", close: "Closed Sep 30, 2026", onchainId: 3, acceptingPositions: false },
+  { marketId: "concept-1", category: "network", title: "Will Stellar pass 70 million ledgers this year?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 68, volume: "Concept", close: "Example" },
+  { marketId: "concept-2", category: "network", title: "Will average ledger close stay below 6 seconds?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 76, volume: "Concept", close: "Example" },
+  { marketId: "concept-3", category: "crypto", title: "Will XLM gain 10% over the next seven days?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 47, volume: "Concept", close: "Example" },
+  { marketId: "concept-4", category: "network", title: "Will mainnet process 100+ operations in one ledger?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 61, volume: "Concept", close: "Example" },
+  { marketId: "concept-5", category: "crypto", title: "Will XLM outperform Bitcoin this month?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 43, volume: "Concept", close: "Example" },
 ];
 
 function loadPositions() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(POSITION_STORAGE_KEY) || "[]");
     if (!Array.isArray(saved)) return [];
-    const marketTitles = new Set(baseMarkets.map((market) => market.title));
+    const knownMarketIds = new Set(baseMarkets.map((market) => market.marketId));
     return saved.filter((position) => {
       if (!position || typeof position !== "object") return false;
       const validExplorer = !position.explorerUrl
         || (typeof position.explorerUrl === "string" && position.explorerUrl.startsWith(TESTNET_EXPLORER_PREFIX));
       const validStatus = !position.status || ["pending", "confirmed", "failed"].includes(position.status);
-      return marketTitles.has(position.title)
+      const hasKnownMarketId = position.marketId != null && knownMarketIds.has(position.marketId);
+      const matchesKnownTitle = baseMarkets.some((m) => m.title === position.title);
+      return (hasKnownMarketId || matchesKnownTitle)
         && ["yes", "no"].includes(position.outcome)
         && /^\d{1,4}(\.\d{1,2})?$/.test(position.stake)
         && /^\d{1,8}(\.\d{1,2})?$/.test(position.returns)
@@ -33,6 +35,12 @@ function loadPositions() {
         && /^[0-9: APMapm.]{1,20}$/.test(position.time)
         && validStatus
         && validExplorer;
+    }).map((position) => {
+      if (position.marketId == null) {
+        const match = baseMarkets.find((m) => m.title === position.title);
+        if (match) position.marketId = match.marketId;
+      }
+      return position;
     }).slice(0, 20);
   } catch {
     return [];
@@ -126,7 +134,7 @@ function renderMarkets(filter = "all") {
     return { ...market, yes: Math.max(8, Math.min(92, Math.round(50 + distance * 50))), detail: `XLM is currently ${formatPrice(state.price)}. Resolves from the CoinGecko daily close.` };
   }).filter((market) => filter === "all" || market.category === filter);
   $("#market-list").innerHTML = markets.map((market) => {
-    const index = baseMarkets.findIndex((item) => item.title === market.title);
+    const index = baseMarkets.findIndex((item) => item.marketId === market.marketId);
     const badge = market.onchainId ? `<span class="market-badge closed">Testnet #${market.onchainId} · closed</span>` : '<span class="market-badge">Concept</span>';
     const action = market.onchainId ? "Inspect market" : "Preview concept";
     return `<article class="market-card"><div class="market-card-header"><span class="category">${market.category}</span>${badge}</div><h3>${market.title}</h3><p>${market.detail}</p><div class="probability" aria-label="Illustrative probability, not live pool odds"><span style="width:${market.yes}%"></span></div><div class="outcomes"><strong class="yes">Sample ${market.yes}%</strong><strong class="no">Sample ${100 - market.yes}%</strong></div><div class="market-card-action"><div class="market-meta"><span>${market.close}</span></div><button class="trade-link" type="button" data-trade-index="${index}">${action} <svg><use href="#i-arrow" /></svg></button></div></article>`;
@@ -318,6 +326,7 @@ $("#order-form").addEventListener("submit", async (event) => {
   }
   const probability = state.outcome === "yes" ? market.yes : 100 - market.yes;
   const position = {
+    marketId: market.marketId,
     title: market.title,
     outcome: state.outcome,
     stake: stake.toFixed(0),
@@ -327,7 +336,7 @@ $("#order-form").addEventListener("submit", async (event) => {
 
   if (!market.onchainId) {
     if (state.action === "sell") {
-      const openPosition = [...state.positions].reverse().find((item) => item.title === market.title && !item.marketId && !item.hash);
+      const openPosition = [...state.positions].reverse().find((item) => item.marketId === market.marketId && !item.hash && (!item.status || item.status === "simulated"));
       if (!openPosition) {
         window.showWalletNotice("There is no simulated position to sell for this market.", true);
         return;
@@ -407,7 +416,7 @@ $("#order-form").addEventListener("submit", async (event) => {
             status: "pending",
             hash,
             explorerUrl,
-            marketId: market.onchainId,
+            marketId: market.marketId,
           };
           state.positions.unshift(pendingPosition);
           savePositions();
@@ -430,7 +439,7 @@ $("#order-form").addEventListener("submit", async (event) => {
           status: "confirmed",
           explorerUrl: transaction.explorerUrl,
           hash: transaction.hash,
-          marketId: market.onchainId,
+          marketId: market.marketId,
         });
       }
       savePositions();
