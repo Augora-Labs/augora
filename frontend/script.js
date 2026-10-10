@@ -16,6 +16,12 @@ const baseMarkets = [
   { marketId: "concept-5", category: "crypto", title: "Will XLM outperform Bitcoin this month?", detail: "Product concept. Resolution criteria, oracle, and onchain market are not configured.", yes: 43, volume: "Concept", close: "Example" },
 ];
 
+function parseTransactionHash(url) {
+  if (typeof url !== "string" || !url.startsWith(TESTNET_EXPLORER_PREFIX)) return null;
+  const hash = url.slice(TESTNET_EXPLORER_PREFIX.length);
+  return /^[0-9a-f]{64}$/i.test(hash) ? hash.toLowerCase() : null;
+}
+
 function loadPositions() {
   try {
     const saved = JSON.parse(sessionStorage.getItem(POSITION_STORAGE_KEY) || "[]");
@@ -24,7 +30,7 @@ function loadPositions() {
     return saved.filter((position) => {
       if (!position || typeof position !== "object") return false;
       const validExplorer = !position.explorerUrl
-        || (typeof position.explorerUrl === "string" && position.explorerUrl.startsWith(TESTNET_EXPLORER_PREFIX));
+        || (typeof position.explorerUrl === "string" && parseTransactionHash(position.explorerUrl) !== null);
       const validStatus = !position.status || ["pending", "confirmed", "failed"].includes(position.status);
       const hasKnownMarketId = position.marketId != null && knownMarketIds.has(position.marketId);
       const matchesKnownTitle = baseMarkets.some((m) => m.title === position.title);
@@ -218,13 +224,15 @@ function selectMarket(index, scroll = true) {
 function renderPositions() {
   if (!state.positions.length) return;
   $("#position-list").innerHTML = state.positions.map((position) => {
+    const validHash = parseTransactionHash(position.explorerUrl);
+    const explorerLink = validHash ? `${TESTNET_EXPLORER_PREFIX}${validHash}` : null;
     let result;
     if (position.status === "pending") {
-      result = `<a class="position-result pending" href="${position.explorerUrl || '#'}" target="_blank" rel="noreferrer">Pending <svg><use href="#i-external" /></svg></a>`;
+      result = `<a class="position-result pending" href="${explorerLink || '#'}" target="_blank" rel="noreferrer">Pending <svg><use href="#i-external" /></svg></a>`;
     } else if (position.status === "failed") {
       result = '<span class="position-result failed">Failed</span>';
-    } else if (position.explorerUrl) {
-      result = `<a class="position-result onchain" href="${position.explorerUrl}" target="_blank" rel="noreferrer">Confirmed <svg><use href="#i-external" /></svg></a>`;
+    } else if (explorerLink) {
+      result = `<a class="position-result onchain" href="${explorerLink}" target="_blank" rel="noreferrer">Confirmed <svg><use href="#i-external" /></svg></a>`;
     } else {
       result = '<span class="position-result">Simulated</span>';
     }
