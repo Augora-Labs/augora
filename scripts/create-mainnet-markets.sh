@@ -33,8 +33,8 @@ if [[ ! -f "$OUTPUT" ]]; then
   exit 1
 fi
 
-MARKET_ID=$(python3 -c "import json; print(json.load(open('$OUTPUT'))['contracts']['market'])")
-DEPLOYER=$(python3 -c "import json; print(json.load(open('$OUTPUT'))['deployer'])")
+MARKET_ID=$(python3 -c "import json,sys; print(json.load(sys.stdin)['contracts']['market'])" < "$OUTPUT")
+DEPLOYER=$(python3 -c "import json,sys; print(json.load(sys.stdin)['deployer'])" < "$OUTPUT")
 HORIZON="https://horizon.stellar.org"
 
 get_bal() {
@@ -50,14 +50,18 @@ echo -e "Balance:         $(get_bal) XLM"
 echo ""
 echo -e "${YELLOW}Markets to create (from mainnet-markets.json):${NC}"
 python3 -c "
-import json
-markets = json.load(open('$MARKETS_FILE'))
+import json,sys
+markets = json.load(sys.stdin)
 for m in markets:
     resolves = m.get('resolves') or str(m['days']) + ' days'
+    if 'days' not in m and 'duration_secs' not in m:
+        raise SystemExit(f\"Market {m.get('id', '?')}: missing duration_secs and days\")
+    days = m['days'] if 'days' in m else m['duration_secs'] // 86400
+    resolves = m['resolves'] if 'resolves' in m else f'{days} days'
     print(f'  [{m[\"id\"]}] {m[\"category\"]:15} Resolves: {resolves}')
     print(f'       {m[\"question\"][:75]}')
     print()
-"
+" < "$MARKETS_FILE"
 echo ""
 read -r -p "Review the questions above. Type 'create' to proceed: " CONFIRM
 if [[ "$CONFIRM" != "create" ]]; then
@@ -85,13 +89,18 @@ CREATED=0
 FAILED=0
 
 python3 -c "
-import json
-markets = json.load(open('$MARKETS_FILE'))
+import json,sys
+markets = json.load(sys.stdin)
 for m in markets:
     secs = m.get('duration_secs') or m['days'] * 86400
     resolves = m.get('resolves') or str(m['days']) + ' days'
+    if 'duration_secs' not in m and 'days' not in m:
+        raise SystemExit(f\"Market {m.get('id', '?')}: missing duration_secs and days\")
+    secs = m['duration_secs'] if 'duration_secs' in m else m['days'] * 86400
+    days = m['days'] if 'days' in m else secs // 86400
+    resolves = m['resolves'] if 'resolves' in m else f\"{days} days\"
     print(f\"{m['id']}|{m['category']}|{m['question']}|{m['image_url']}|{secs}|{resolves}\")
-" | while IFS='|' read -r IDX CATEGORY QUESTION IMAGE_URL DURATION_SECS RESOLVES; do
+" < "$MARKETS_FILE" | while IFS='|' read -r IDX CATEGORY QUESTION IMAGE_URL DURATION_SECS RESOLVES; do
 
   info "Creating market $IDX: ${QUESTION:0:60}..."
   B=$(get_bal)
