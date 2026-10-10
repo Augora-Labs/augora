@@ -99,6 +99,11 @@ for m in markets:
     secs = m['duration_secs'] if 'duration_secs' in m else m['days'] * 86400
     days = m['days'] if 'days' in m else secs // 86400
     resolves = m['resolves'] if 'resolves' in m else f\"{days} days\"
+    if m.get('duration_secs') is None and m.get('days') is None:
+        raise SystemExit('Market {}: missing duration_secs and days'.format(m.get('id', '?')))
+for m in markets:
+    secs = m['duration_secs'] if m.get('duration_secs') is not None else m['days'] * 86400
+    resolves = m.get('resolves') or (str(m['days']) + ' days' if m.get('days') is not None else f'{secs / 86400:g} days')
     print(f\"{m['id']}|{m['category']}|{m['question']}|{m['image_url']}|{secs}|{resolves}\")
 " < "$MARKETS_FILE" | while IFS='|' read -r IDX CATEGORY QUESTION IMAGE_URL DURATION_SECS RESOLVES; do
 
