@@ -262,8 +262,8 @@ Useful view methods: `get_market(market_id)`, `get_bet(market_id, user)`,
 
 ## Contract error codes
 
-Failed invocations trap with a `MarketError` code. The full mapping from
-`contracts/prediction_market/src/lib.rs`:
+Failed invocations trap with a `MarketError` code. The full mapping from the separate
+[`augora-contracts`](https://github.com/Augora-Labs/augora-contracts) repository (`contracts/prediction_market/src/lib.rs` on `main`):
 
 | Code | Error | Typical cause |
 |------|-------|---------------|
