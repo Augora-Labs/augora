@@ -129,7 +129,7 @@ function renderMarkets(filter = "all") {
     const index = baseMarkets.findIndex((item) => item.title === market.title);
     const badge = market.onchainId ? `<span class="market-badge closed">Testnet #${market.onchainId} · closed</span>` : '<span class="market-badge">Concept</span>';
     const action = market.onchainId ? "Inspect market" : "Preview concept";
-    return `<article class="market-card"><div class="market-card-header"><span class="category">${market.category}</span>${badge}</div><h3>${market.title}</h3><p>${market.detail}</p><div class="probability" aria-label="Illustrative probability, not live pool odds"><span style="width:${market.yes}%"></span></div><div class="outcomes"><strong class="yes">Sample ${market.yes}%</strong><strong class="no">Sample ${100 - market.yes}%</strong></div><div class="market-card-action"><div class="market-meta"><span>${market.close}</span></div><button class="trade-link" type="button" data-trade-index="${index}">${action} <svg><use href="#i-arrow" /></svg></button></div></article>`;
+    return `<article class="market-card"><div class="market-card-header"><span class="category">${market.category}</span>${badge}</div><h3>${market.title}</h3><p>${market.detail}</p><div class="probability" role="progressbar" aria-valuemin="0" aria-valuemax="100" aria-valuenow="${market.yes}" aria-valuetext="Sample ${market.yes}% Yes" aria-label="Illustrative probability, not live pool odds"><span style="width:${market.yes}%" aria-hidden="true"></span></div><div class="outcomes"><strong class="yes">Sample ${market.yes}%</strong><strong class="no">Sample ${100 - market.yes}%</strong></div><div class="market-card-action"><div class="market-meta"><span>${market.close}</span></div><button class="trade-link" type="button" data-trade-index="${index}">${action} <svg><use href="#i-arrow" /></svg></button></div></article>`;
   }).join("");
 }
 
@@ -184,7 +184,13 @@ function selectMarket(index, scroll = true) {
   $("#trade-detail").textContent = market.detail;
   $("#trade-close").textContent = market.close;
   $("#trade-probability").textContent = `Sample ${market.yes}% Yes`;
-  $("#trade-probability-bar").style.width = `${market.yes}%`;
+  const probBar = $("#trade-probability-bar");
+  probBar.style.width = `${market.yes}%`;
+  const probTrack = probBar.closest(".large-probability");
+  if (probTrack) {
+    probTrack.setAttribute("aria-valuenow", String(market.yes));
+    probTrack.setAttribute("aria-valuetext", `Sample ${market.yes}% Yes`);
+  }
   $("#yes-price").textContent = `${market.yes}%`;
   $("#no-price").textContent = `${100 - market.yes}%`;
   const orderSubmit = $("#submit-order");
