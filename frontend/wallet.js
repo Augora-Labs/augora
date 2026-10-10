@@ -100,10 +100,15 @@ async function validateNetwork() {
   const { getNetwork } = await loadApi();
   const result = await getNetwork();
   if (result.error) throw new Error(errorMessage(result.error));
-  state.network = result.network;
-  if (result.networkPassphrase !== TESTNET_PASSPHRASE && result.network !== "TESTNET") {
+  // A reported network label cannot override an explicitly mismatched passphrase.
+  // Older wallet API responses can omit the passphrase; only then trust the label.
+  const passphraseProvided = result.networkPassphrase !== undefined && result.networkPassphrase !== null;
+  if (passphraseProvided
+    ? result.networkPassphrase !== TESTNET_PASSPHRASE
+    : result.network !== "TESTNET") {
     throw new Error("Switch Freighter to Testnet, then connect again.");
   }
+  state.network = result.network || "TESTNET";
 }
 
 async function connect() {
