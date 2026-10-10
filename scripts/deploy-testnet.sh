@@ -289,9 +289,21 @@ fi
 # ── Optional: set up sponsor as fee recipient ──────────────────────────────────
 if [[ -n "${SPONSOR_SECRET:-}" ]]; then
   step "Configuring fee sponsorship"
-  SPONSOR_PUBLIC=$(stellar keys public-key STRD-deployer 2>/dev/null || \
-    stellar keys generate STRD-sponsor --secret-key <<< "$SPONSOR_SECRET" && \
-    stellar keys public-key STRD-sponsor)
+  # The sponsor must be imported from SPONSOR_SECRET, never inferred from
+  # STRD-deployer. Refresh a pre-existing sponsor alias from the given secret.
+  if stellar keys public-key STRD-sponsor >/dev/null 2>&1; then
+    printf '%s\n' "$SPONSOR_SECRET" | stellar keys add STRD-sponsor --secret-key --overwrite >/dev/null \
+      || error "Unable to update STRD-sponsor identity from SPONSOR_SECRET"
+  else
+    printf '%s\n' "$SPONSOR_SECRET" | stellar keys add STRD-sponsor --secret-key >/dev/null \
+      || error "Unable to add STRD-sponsor identity from SPONSOR_SECRET"
+  fi
+  SPONSOR_PUBLIC=$(stellar keys public-key STRD-sponsor) \
+    || error "Sponsor public key could not be read after import"
+  [[ "$SPONSOR_PUBLIC" =~ ^G[A-Z2-7]{55}$ ]] \
+    || error "Invalid sponsor public key returned by Stellar CLI"
+  [[ "$SPONSOR_PUBLIC" != "$DEPLOYER_PUBLIC" ]] \
+    || error "Sponsor identity resolves to deployer; provide a separate sponsor key"
   info "Sponsor: $SPONSOR_PUBLIC"
 fi
 
