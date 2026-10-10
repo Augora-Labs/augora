@@ -4,6 +4,8 @@ This directory contains the source files for a new project overview video. The o
 
 The renderer uses Microsoft Edge, FFmpeg, FFprobe, Python, and `edge-tts`. It captures the current static site, generates narration and captions, and writes `Stellar-Trade-Overview.mp4`.
 
+> **Note:** `render.ps1` starts its own local HTTP server on port 8765 for automated screen capture. Ensure port 8765 is not already in use by another process before running the script.
+
 ```powershell
 powershell -ExecutionPolicy Bypass -File pitch-video/render.ps1
 ```
