@@ -1,44 +1,34 @@
 name: CI
-
 on:
   push:
-    branches: [main]
-  pull_request:
-  workflow_dispatch:
-
+    branches:
+    - main
+  pull_request: null
+  workflow_dispatch: null
 permissions:
   contents: read
-
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
-
 jobs:
   frontend:
     name: Static frontend
     runs-on: ubuntu-latest
     timeout-minutes: 10
     steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 22
-
-      - name: Validate pages and local assets
-        run: node scripts/validate-frontend.mjs
-
-      - name: Check JavaScript syntax
-        run: find frontend -type f -name '*.js' -print0 | xargs -0 -n1 node --check
-
-      - name: Reject tracked secrets and deployment outputs
-        shell: bash
-        run: |
-          prohibited=$(git ls-files | grep -E '(^|/)(\.env|\.deploy\.env|deploy-output\.json|deploy-mainnet-output\.json)$' || true)
-          if [ -n "$prohibited" ]; then
-            echo "Sensitive or generated deployment files are tracked:"
-            echo "$prohibited"
-            exit 1
-          fi
+    - name: Check out repository
+      uses: actions/checkout@v7
+    - name: Set up Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: 22
+    - name: Validate pages and local assets
+      run: node scripts/validate-frontend.mjs
+    - name: Check JavaScript syntax
+      run: find frontend -type f -name '*.js' -print0 | xargs -0 -n1 node --check
+    - name: Reject tracked secrets and deployment outputs
+      shell: bash
+      run: "prohibited=$(git ls-files | grep -E '(^|/)(\\.env|\\.deploy\\.env|deploy-output\\\
+        .json|deploy-mainnet-output\\.json)$' || true)\nif [ -n \"$prohibited\" ];\
+        \ then\n  echo \"Sensitive or generated deployment files are tracked:\"\n\
+        \  echo \"$prohibited\"\n  exit 1\nfi\n"
