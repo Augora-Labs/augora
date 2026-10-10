@@ -53,7 +53,7 @@ python3 -c "
 import json
 markets = json.load(open('$MARKETS_FILE'))
 for m in markets:
-    resolves = m.get('resolves', f'{m[\"duration_days\"]} days')
+    resolves = m.get('resolves') or str(m['days']) + ' days'
     print(f'  [{m[\"id\"]}] {m[\"category\"]:15} Resolves: {resolves}')
     print(f'       {m[\"question\"][:75]}')
     print()
@@ -88,8 +88,8 @@ python3 -c "
 import json
 markets = json.load(open('$MARKETS_FILE'))
 for m in markets:
-    secs = m.get('duration_secs', m['duration_days'] * 86400)
-    resolves = m.get('resolves', f\"{m['duration_days']} days\")
+    secs = m.get('duration_secs') or m['days'] * 86400
+    resolves = m.get('resolves') or str(m['days']) + ' days'
     print(f\"{m['id']}|{m['category']}|{m['question']}|{m['image_url']}|{secs}|{resolves}\")
 " | while IFS='|' read -r IDX CATEGORY QUESTION IMAGE_URL DURATION_SECS RESOLVES; do
 
