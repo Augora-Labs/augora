@@ -8,6 +8,8 @@ The browser connects to Freighter on Testnet. It builds and simulates a contract
 
 Market resolution is currently performed by authorized accounts. Live public price feeds provide context, but they do not resolve the market. That boundary is visible in the product and is a key design decision for future oracle and evidence work.
 
-The contracts include tests for payout conservation, fee accounting, referrals, rewards, access control, storage lifetime, and cross-contract behavior. The next milestones are reading market state directly from the contracts, publishing precise resolution criteria and evidence, and connecting the catalog and rankings to live data.
+The contracts include tests for payout conservation, fee accounting, referrals, rewards, access control, storage lifetime, and cross-contract behavior.
+
+The next milestones are reading market state directly from the contracts, publishing precise resolution criteria and evidence, and connecting the catalog and rankings to live data.
 
 Stellar Trade is a Testnet prototype. We are building the path from a clear question to a settlement users can inspect.

@@ -32,16 +32,28 @@ if (-not (Test-Path $ffmpeg) -or -not (Test-Path $ffprobe)) {
 if (Test-Path $workDir) { Remove-Item -LiteralPath $workDir -Recurse -Force }
 New-Item -ItemType Directory -Path $workDir | Out-Null
 
-$scenes = @(
-    @{ Image='01-title.png'; Url=('file:///' + ((Join-Path $pitchDir 'title.html') -replace '\\','/')); Text='Prediction markets can make it hard to see how a position is handled, who decides the result, and how settlement works.' },
-    @{ Image='02-home.png'; Url='http://127.0.0.1:8765/index.html'; Text='Stellar Trade is an open source experiment in making those rules visible. It brings market positions and settlement to Stellar smart contracts, where users can inspect transactions on a public ledger.' },
-    @{ Image='03-markets.png'; Url='http://127.0.0.1:8765/markets.html'; Text='The prototype has four connected contracts: prediction markets, a reward asset, referrals, and a leaderboard. The market contract pools XLM positions, records fees by market, supports cancellations and refunds, and calculates proportional payouts when a market is resolved.' },
-    @{ Image='04-trade.png'; Url='http://127.0.0.1:8765/index.html#trade'; Text='The browser connects to Freighter on Testnet. It builds and simulates a contract transaction, asks the wallet to sign, then submits and tracks the result. Testnet market three demonstrates this path; its published close date has passed, and the site does not yet read its current resolution state.' },
-    @{ Image='05-how.png'; Url='http://127.0.0.1:8765/index.html#how'; Text='Market resolution is currently performed by authorized accounts. Live public price feeds provide context, but they do not resolve the market. That boundary is visible in the product and is a key design decision for future oracle and evidence work.' },
-    @{ Image='06-leaderboard.png'; Url='http://127.0.0.1:8765/leaderboard.html'; Text='The contracts include tests for payout conservation, fee accounting, referrals, rewards, access control, storage lifetime, and cross-contract behavior.' },
-    @{ Image='07-network.png'; Url='http://127.0.0.1:8765/index.html#network'; Text='The next milestones are reading market state directly from the contracts, publishing precise resolution criteria and evidence, and connecting the catalog and rankings to live data.' },
-    @{ Image='08-outro.png'; Url=('file:///' + ((Join-Path $pitchDir 'outro.html') -replace '\\','/')); Text='Stellar Trade is a Testnet prototype. We are building the path from a clear question to a settlement users can inspect.' }
+$narrationPath = Join-Path $pitchDir 'narration.txt'
+$paragraphs = (Get-Content -LiteralPath $narrationPath -Raw) -split "`r?`n`r?`n" | ForEach-Object { $_.Trim() } | Where-Object { $_ }
+
+$sceneConfigs = @(
+    @{ Image='01-title.png'; Url=('file:///' + ((Join-Path $pitchDir 'title.html') -replace '\\','/')) },
+    @{ Image='02-home.png'; Url='http://127.0.0.1:8765/index.html' },
+    @{ Image='03-markets.png'; Url='http://127.0.0.1:8765/markets.html' },
+    @{ Image='04-trade.png'; Url='http://127.0.0.1:8765/index.html#trade' },
+    @{ Image='05-how.png'; Url='http://127.0.0.1:8765/index.html#how' },
+    @{ Image='06-leaderboard.png'; Url='http://127.0.0.1:8765/leaderboard.html' },
+    @{ Image='07-network.png'; Url='http://127.0.0.1:8765/index.html#network' },
+    @{ Image='08-outro.png'; Url=('file:///' + ((Join-Path $pitchDir 'outro.html') -replace '\\','/')) }
 )
+
+$scenes = @()
+for ($i = 0; $i -lt $sceneConfigs.Count; $i++) {
+    $scenes += @{
+        Image = $sceneConfigs[$i].Image
+        Url   = $sceneConfigs[$i].Url
+        Text  = $paragraphs[$i]
+    }
+}
 
 $server = Start-Process -FilePath python -ArgumentList @('-m','http.server','8765','--bind','127.0.0.1','--directory',$frontendDir) -WindowStyle Hidden -PassThru
 try {
