@@ -1,3 +1,5 @@
+import { fetchJson } from "./fetch.js";
+
 const HORIZON_TESTNET = "https://horizon-testnet.stellar.org";
 const FRIENDbot = "https://friendbot.stellar.org";
 const TESTNET_PASSPHRASE = "Test SDF Network ; September 2015";
@@ -65,10 +67,8 @@ function render() {
 
 async function loadBalance() {
   try {
-    const response = await fetch(`${HORIZON_TESTNET}/accounts/${state.address}`);
-    if (response.status === 404) { state.balance = 0; return; }
-    if (!response.ok) throw new Error("Balance unavailable");
-    const account = await response.json();
+    const account = await fetchJson(`${HORIZON_TESTNET}/accounts/${state.address}`, { allow404: true });
+    if (!account) { state.balance = 0; return; }
     const native = account.balances.find((item) => item.asset_type === "native");
     state.balance = native ? Number(native.balance) : 0;
   } catch {
@@ -145,8 +145,7 @@ async function restore() {
 async function fund() {
   setBusy("Funding…");
   try {
-    const response = await fetch(`${FRIENDbot}?addr=${encodeURIComponent(state.address)}`);
-    if (!response.ok) throw new Error("Friendbot could not fund this account right now.");
+    await fetchJson(`${FRIENDbot}?addr=${encodeURIComponent(state.address)}`);
     await new Promise((resolve) => setTimeout(resolve, 5000));
     await loadBalance();
     render();
