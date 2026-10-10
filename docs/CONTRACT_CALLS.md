@@ -34,6 +34,7 @@ identity or metadata of contracts already deployed at these addresses.
 |--------|-----------|--------|
 | `place_bet` | `user`, `market_id`, `is_yes`, `amount` | Records or increases a YES/NO bet after applying fees. |
 | `reduce_position` | `user`, `market_id`, `amount` | Reduces an existing position before market close and refunds proportional stake. |
+| `reduce_position` | `user: Address`, `market_id: u64`, `amount: i128` | Reduces an existing position by an amount in the asset's smallest unit. |
 | `resolve_market` | `caller`, `market_id`, `outcome` | An authorized account resolves the market with a YES/NO outcome. |
 | `claim` | `user`, `market_id` | Claims winnings, points, and token rewards for an eligible user. |
 
@@ -63,6 +64,9 @@ Notes:
 ## Example: reduce_position
 
 Use `reduce_position` before close to reduce an existing position stake.
+Use `reduce_position` to partially reduce an existing onchain position. The
+argument order is user address, `u64` market ID, then `i128` amount in the
+asset's smallest unit; this matches `frontend/soroban.js`.
 
 ```bash
 soroban contract invoke \
@@ -81,6 +85,8 @@ Notes:
 - `market_id` is the numeric market identifier.
 - `amount` should be passed in the token's smallest unit (stroops).
 - Only valid before the market close time.
+This example reduces by 0.5 XLM (5,000,000 stroops). Simulate and verify the
+current market state before signing.
 
 ## Example: resolve_market
 
@@ -235,6 +241,10 @@ console.log(status.status); // SUCCESS | FAILED
 from the ABI table (`reduce_position`: user address, `u64` market id, `i128`
 amount; `resolve_market`: caller address, `u64` market id, `bool`
 outcome; `claim`: user address, `u64` market id).
+`reduce_position`, `resolve_market`, and `claim` follow the same pattern with
+ordered argument lists from the ABI table (`reduce_position`: user address,
+`u64` market ID, `i128` amount; `resolve_market`: caller address, `u64` market
+ID, `bool` outcome; `claim`: user address, `u64` market ID).
 
 ## Read-only queries (no signing)
 
