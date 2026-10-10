@@ -32,3 +32,9 @@ jobs:
         .json|deploy-mainnet-output\\.json)$' || true)\nif [ -n \"$prohibited\" ];\
         \ then\n  echo \"Sensitive or generated deployment files are tracked:\"\n\
         \  echo \"$prohibited\"\n  exit 1\nfi\n"
+    - name: Check out repository
+      uses: actions/checkout@v4
+    - name: Set up Node.js
+      uses: actions/setup-node@v7
+      with:
+        node-version: 22
