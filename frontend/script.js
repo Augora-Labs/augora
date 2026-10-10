@@ -92,10 +92,18 @@ async function updateNetwork() {
 }
 
 function renderChart(prices) {
-  const values = prices.map((point) => point[1]);
+  const values = Array.isArray(prices)
+    ? prices.map((point) => point[1]).filter((value) => Number.isFinite(value))
+    : [];
+  if (values.length === 0) {
+    $("#price-chart").innerHTML = '<span class="chart-loading">Price history temporarily unavailable</span>';
+    $("#price-range").textContent = "Unavailable";
+    return;
+  }
   const min = Math.min(...values), max = Math.max(...values), spread = max - min || 1;
   const width = 500, height = 126, pad = 5;
-  const points = values.map((value, index) => `${(index / (values.length - 1)) * width},${pad + (1 - (value - min) / spread) * (height - pad * 2)}`).join(" ");
+  const plottedValues = values.length === 1 ? [values[0], values[0]] : values;
+  const points = plottedValues.map((value, index) => `${(index / (plottedValues.length - 1)) * width},${pad + (1 - (value - min) / spread) * (height - pad * 2)}`).join(" ");
   const area = `0,${height} ${points} ${width},${height}`;
   $("#price-chart").innerHTML = `<svg viewBox="0 0 ${width} ${height}" preserveAspectRatio="none" role="img" aria-label="Seven day XLM price movement"><defs><linearGradient id="chart-fill" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#7df7bd" stop-opacity=".24"/><stop offset="1" stop-color="#7df7bd" stop-opacity="0"/></linearGradient></defs><polyline class="area" points="${area}"/><polyline points="${points}" vector-effect="non-scaling-stroke"/></svg>`;
   $("#price-range").textContent = `${formatPrice(min)} – ${formatPrice(max)}`;
@@ -324,7 +332,12 @@ document.querySelectorAll("[data-amount]").forEach((button) => button.addEventLi
 
 $("#order-form").addEventListener("submit", async (event) => {
   event.preventDefault();
-  const stake = Math.max(1, Math.min(1000, Number($("#stake-amount").value) || 1));
+  const requestedStake = Number($("#stake-amount").value);
+  if (!Number.isFinite(requestedStake) || requestedStake < 1 || requestedStake > 1000) {
+    window.showWalletNotice("Enter a stake between 1 and 1000 XLM. No order was submitted.", true);
+    return;
+  }
+  const stake = requestedStake;
   const market = currentMarket();
   if (market.onchainId && !market.acceptingPositions) {
     window.showWalletNotice("This Testnet market passed its published close date. Buys and sells are unavailable.", true);
