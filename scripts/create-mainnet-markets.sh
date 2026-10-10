@@ -58,6 +58,7 @@ for m in markets:
         raise SystemExit(f\"Market {m.get('id', '?')}: missing duration_secs and days\")
     days = m['days'] if 'days' in m else m['duration_secs'] // 86400
     resolves = m['resolves'] if 'resolves' in m else f'{days} days'
+    resolves = m.get('resolves') or f'{m[\"days\"]} days'
     print(f'  [{m[\"id\"]}] {m[\"category\"]:15} Resolves: {resolves}')
     print(f'       {m[\"question\"][:75]}')
     print()
