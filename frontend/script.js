@@ -11,6 +11,15 @@ const COINGECKO_URL = "https://api.coingecko.com/api/v3";
 const POSITION_STORAGE_KEY = "stellartrade:session-positions";
 const TESTNET_EXPLORER_PREFIX = `${TESTNET.explorerUrl}/`;
 
+// Never interpolate untrusted session-storage strings into HTML attributes.
+function canonicalExplorerUrl(value) {
+  if (typeof value !== "string" || !value.startsWith(TESTNET_EXPLORER_PREFIX)) return "";
+  const hash = value.slice(TESTNET_EXPLORER_PREFIX.length);
+  return hash.length === 64 && /^[0-9a-f]{64}$/.test(hash)
+    ? `${TESTNET_EXPLORER_PREFIX}${hash}`
+    : "";
+}
+
 const state = { price: null, change: null, selectedMarket: 0, action: "buy", outcome: "yes", positions: [] };
 const baseMarkets = [
   { marketId: 3, category: "crypto", title: "Will XLM close above $0.50 by September 30, 2026?", detail: "Deployed Stellar Testnet market #3. Its published close date has passed; the app does not read current settlement state.", yes: 50, volume: "Closed · Testnet", close: "Closed Sep 30, 2026", onchainId: 3, acceptingPositions: false },
@@ -36,6 +45,8 @@ function loadPositions() {
       if (!position || typeof position !== "object") return false;
       const validExplorer = !position.explorerUrl
         || (typeof position.explorerUrl === "string" && parseTransactionHash(position.explorerUrl) !== null);
+      const validExplorer = position.explorerUrl === undefined || position.explorerUrl === ""
+        || canonicalExplorerUrl(position.explorerUrl) === position.explorerUrl;
       const validStatus = !position.status || ["pending", "confirmed", "failed"].includes(position.status);
       const hasKnownMarketId = position.marketId != null && knownMarketIds.has(position.marketId);
       const matchesKnownTitle = baseMarkets.some((m) => m.title === position.title);
@@ -249,6 +260,16 @@ function renderPositions() {
       result = '<span class="position-result failed">Failed</span>';
     } else if (explorerLink) {
       result = `<a class="position-result onchain" href="${explorerLink}" target="_blank" rel="noreferrer">Confirmed <svg><use href="#i-external" /></svg></a>`;
+    const explorerUrl = canonicalExplorerUrl(position.explorerUrl);
+    let result;
+    if (position.status === "pending") {
+      result = explorerUrl
+        ? `<a class="position-result pending" href="${explorerUrl}" target="_blank" rel="noreferrer">Pending <svg><use href="#i-external" /></svg></a>`
+        : '<span class="position-result pending">Pending</span>';
+    } else if (position.status === "failed") {
+      result = '<span class="position-result failed">Failed</span>';
+    } else if (explorerUrl) {
+      result = `<a class="position-result onchain" href="${explorerUrl}" target="_blank" rel="noreferrer">Confirmed <svg><use href="#i-external" /></svg></a>`;
     } else {
       result = '<span class="position-result">Simulated</span>';
     }
