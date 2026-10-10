@@ -116,11 +116,14 @@ async function updatePrice() {
       fetchJson(`${COINGECKO_URL}/coins/stellar/market_chart?vs_currency=usd&days=7&interval=hourly`),
     ]);
     state.price = spot.stellar.usd;
-    state.change = spot.stellar.usd_24h_change;
+    const rawChange = spot.stellar.usd_24h_change;
+    state.change = typeof rawChange === "number" && Number.isFinite(rawChange) ? rawChange : null;
     $("#xlm-price").textContent = formatPrice(state.price);
     const change = $("#xlm-change");
-    change.textContent = `${state.change >= 0 ? "+" : ""}${state.change.toFixed(2)}% 24h`;
-    change.classList.toggle("negative", state.change < 0);
+    change.textContent = state.change === null
+      ? "n/a 24h"
+      : `${state.change >= 0 ? "+" : ""}${state.change.toFixed(2)}% 24h`;
+    change.classList.toggle("negative", state.change !== null && state.change < 0);
     renderChart(chart.prices);
     renderMarkets();
     selectMarket(state.selectedMarket, false);
