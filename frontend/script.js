@@ -295,35 +295,71 @@ window.showWalletNotice = (message, isError = false) => {
 
 const inFlightMarkets = new Set();
 
+const activeReconciliations = new WeakSet();
+
 function reconcilePendingPosition(position) {
-  if (!position?.hash || position.status !== "pending") return;
+  if (!position?.hash || position.status !== "pending" || activeReconciliations.has(position)) return;
+  activeReconciliations.add(position);
   let attempts = 0;
   const pollTimer = setInterval(async () => {
     if (document.hidden) return;
     attempts += 1;
     if (attempts > 30 || position.status !== "pending") {
       clearInterval(pollTimer);
+  let pollTimer = null;
+  let pollActive = false;
+
+  function stop() {
+    if (pollTimer !== null) clearInterval(pollTimer);
+    pollTimer = null;
+    document.removeEventListener("visibilitychange", onVisibilityChange);
+    activeReconciliations.delete(position);
+  }
+
+  async function poll() {
+    if (document.hidden || pollActive) return;
+    if (attempts >= 30 || position.status !== "pending") {
+      stop();
       return;
     }
+    attempts += 1;
+    pollActive = true;
     try {
       const res = await checkTransactionStatus(position.hash);
       if (res?.status === "SUCCESS") {
         position.status = "confirmed";
         savePositions();
         renderPositions();
-        clearInterval(pollTimer);
+        stop();
         window.stellarWallet?.refreshBalance().catch(() => {});
         showToast("Pending position confirmed on Stellar Testnet!");
       } else if (res?.status === "FAILED") {
         position.status = "failed";
         savePositions();
         renderPositions();
-        clearInterval(pollTimer);
+        stop();
       }
     } catch {
       // transient network poll error
+    } finally {
+      pollActive = false;
     }
-  }, 2000);
+  }
+
+  function onVisibilityChange() {
+    if (document.hidden) {
+      if (pollTimer !== null) clearInterval(pollTimer);
+      pollTimer = null;
+    } else if (position.status !== "pending") {
+      stop();
+    } else if (pollTimer === null) {
+      pollTimer = setInterval(poll, 2000);
+      void poll();
+    }
+  }
+
+  document.addEventListener("visibilitychange", onVisibilityChange);
+  onVisibilityChange();
 }
 
 document.querySelectorAll("[data-filter]").forEach((button) => button.addEventListener("click", () => {
@@ -603,3 +639,27 @@ document.addEventListener("visibilitychange", () => {
 updateNetwork();
 updatePrice();
 startPolling();
+// Background tabs should not spend public Horizon or CoinGecko rate limits.
+let networkPollTimer = null;
+let pricePollTimer = null;
+
+function stopPublicPolling() {
+  if (networkPollTimer !== null) clearInterval(networkPollTimer);
+  if (pricePollTimer !== null) clearInterval(pricePollTimer);
+  networkPollTimer = null;
+  pricePollTimer = null;
+}
+
+function startPublicPolling() {
+  if (document.hidden || networkPollTimer !== null) return;
+  void updateNetwork();
+  void updatePrice();
+  networkPollTimer = setInterval(() => { if (!document.hidden) void updateNetwork(); }, 10000);
+  pricePollTimer = setInterval(() => { if (!document.hidden) void updatePrice(); }, 60000);
+}
+
+document.addEventListener("visibilitychange", () => {
+  if (document.hidden) stopPublicPolling();
+  else startPublicPolling();
+});
+startPublicPolling();
