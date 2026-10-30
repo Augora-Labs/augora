@@ -1,11 +1,9 @@
-import { placeBet, reducePosition, checkTransactionStatus } from "./soroban.js";
 import { fetchJson } from "./fetch.js";
 import { TESTNET, placeBet, reducePosition, checkTransactionStatus } from "./soroban.js";
+import { withSubmitOrderWalletGuards } from "./order-guards.js";
 
 const contractExplorer = document.querySelector("[data-contract-explorer]");
 if (contractExplorer) contractExplorer.href = `https://stellar.expert/explorer/testnet/contract/${TESTNET.predictionMarketContract}`;
-import { placeBet, reducePosition, checkTransactionStatus, TESTNET } from "./soroban.js";
-
 const HORIZON_URL = "https://horizon.stellar.org";
 const COINGECKO_URL = "https://api.coingecko.com/api/v3";
 const POSITION_STORAGE_KEY = "stellartrade:session-positions";
@@ -450,26 +448,15 @@ $("#order-form").addEventListener("submit", async (event) => {
     return;
   }
 
-  if (inFlightMarkets.has(market.onchainId)) {
-    window.showWalletNotice("A transaction is already in flight for this market. Please wait for confirmation.", true);
-    return;
-  }
-
-  const wallet = window.stellarWallet;
-  const walletState = wallet?.getState();
-  if (!walletState?.address) {
-    window.showWalletNotice("Connect a funded Freighter Testnet wallet first.", true);
-    await wallet?.connect();
-    return;
-  }
-  if (state.action === "buy" && walletState.balance === 0) {
-    window.showWalletNotice("Fund your Testnet wallet before placing a position.", true);
-    return;
-  }
-  if (state.action === "buy" && Number.isFinite(walletState.balance) && stake + 1 > walletState.balance) {
-    window.showWalletNotice("Leave at least 1 test XLM available for account reserves and fees.", true);
-    return;
-  }
+  const guardResult = await withSubmitOrderWalletGuards({
+    marketId: market.onchainId,
+    inFlightMarkets,
+    action: state.action,
+    stake,
+    onAllowed: ({ wallet, walletState }) => ({ wallet, walletState }),
+  });
+  if (!guardResult.allowed) return;
+  const { wallet, walletState } = guardResult.value;
 
   const submit = $("#submit-order");
   const action = state.action;
