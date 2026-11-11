@@ -25,7 +25,7 @@ function loadSdk() {
   return sdkPromise;
 }
 
-function xlmToStroops(value) {
+export function xlmToStroops(value) {
   const normalized = String(value).trim();
   if (!/^\d+(\.\d{1,7})?$/.test(normalized)) {
     throw new Error("Enter a valid XLM amount with no more than 7 decimal places.");
